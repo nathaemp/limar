@@ -1,0 +1,509 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Limar</title>
+<meta name="description" content="Condições de navegação na baía de Paraty para barqueiros e marinheiros.">
+<meta name="theme-color" content="#0f5a6b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Limar">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: app de convés, uma coluna, abas fixas embaixo; alto contraste para ler sob sol */
+:root{
+  --bg:#eef2f1; --surface:#ffffff; --ink:#0d2a33; --muted:#557079; --line:#cfdcdb;
+  --bay:#0f5a6b; --bay-soft:#d6e8ea; --on-bay:#ffffff; --sand:#e9b949;
+  --go:#1f8a4c; --go-bg:#dcf1e3; --warn:#a86d12; --warn-bg:#fbefd2; --stop:#c0392b; --stop-bg:#f9dedb;
+  --display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#08171c; --surface:#0f242b; --ink:#e6f1f1; --muted:#8fa9ae; --line:#1f3a42;
+  --bay:#4fb3c6; --bay-soft:#123640; --on-bay:#04161b; --sand:#e9b949;
+  --go:#4cc37e; --go-bg:#123425; --warn:#e3a849; --warn-bg:#3a2c12; --stop:#ef6b5c; --stop-bg:#3d1a17; color-scheme:dark}}
+
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.45;padding-top:env(safe-area-inset-top,0px)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px calc(96px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:18px}
+h1,h2{font-family:var(--display);margin:0;text-wrap:balance;letter-spacing:.01em}
+h2{font-size:1.5rem;font-weight:700}
+.eyebrow{font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.num{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.legend{font-size:.82rem;color:var(--muted)}
+a{color:var(--bay)}
+
+header.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+header.top h1{font-size:2rem;line-height:1;font-weight:700}
+.status{font-size:.72rem;font-weight:700;padding:4px 8px;border-radius:4px;white-space:nowrap;background:var(--go-bg);color:var(--go)}
+.status.old{background:var(--warn-bg);color:var(--warn)}
+.status.err{background:var(--stop-bg);color:var(--stop)}
+
+.verdict{background:var(--bay);color:var(--on-bay);border-radius:14px;padding:18px;display:grid;gap:10px}
+.verdict .q{font-family:var(--display);font-size:1.15rem;font-weight:600;opacity:.85}
+.verdict .a{font-family:var(--display);font-size:2.5rem;line-height:1;font-weight:700}
+.verdict .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid currentColor;padding-top:10px}
+.verdict .stats div{display:grid}
+.verdict .stats b{font-family:var(--mono);font-size:1.2rem}
+.verdict .stats span{font-size:.75rem;opacity:.85}
+
+.list{display:grid;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.spot{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;border-top:1px solid var(--line)}
+.spot:first-child{border-top:0}
+.dot{width:14px;height:14px;border-radius:50%;background:var(--line)}
+.spot .name{font-weight:700}
+.spot .note{font-size:.82rem;color:var(--muted)}
+.pill{font-size:.75rem;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap;background:var(--bay-soft);color:var(--muted)}
+.go .dot{background:var(--go)} .go .pill{background:var(--go-bg);color:var(--go)}
+.warn .dot{background:var(--warn)} .warn .pill{background:var(--warn-bg);color:var(--warn)}
+.stop .dot{background:var(--stop)} .stop .pill{background:var(--stop-bg);color:var(--stop)}
+.spot .metrics{font-size:.8rem;color:var(--muted)}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px}
+.hours{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;height:150px}
+.hours .bar{display:grid;grid-template-rows:auto 1fr auto auto;gap:3px;height:100%;text-align:center;font-size:.72rem;min-width:0}
+.hours .col{display:flex;align-items:flex-end;justify-content:center;position:relative}
+.hours .fill{width:70%;border-radius:4px 4px 0 0;background:var(--bay)}
+.hours .fill.hi{background:var(--warn)}
+.hours .fill.max{background:var(--stop)}
+.hours .dir{color:var(--muted)}
+
+.speed{display:grid;place-items:center;gap:4px;padding:6px 0}
+.speed .big{font-family:var(--display);font-size:6.5rem;line-height:.9;font-weight:700;font-variant-numeric:tabular-nums}
+.speed .unit{font-family:var(--display);font-size:1.3rem;color:var(--muted)}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.cell{background:var(--bay-soft);border-radius:10px;padding:10px 12px;display:grid;min-width:0}
+.cell b{font-family:var(--mono);font-size:1.2rem;overflow-wrap:anywhere}
+.cell span{font-size:.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+button,.btn{font:inherit;font-weight:700;border-radius:10px;border:2px solid var(--bay);padding:12px 14px;cursor:pointer;background:var(--bay);color:var(--on-bay);text-align:center;text-decoration:none;display:inline-block}
+button.ghost,.btn.ghost{background:transparent;color:var(--bay)}
+button:disabled{opacity:.5}
+button:focus-visible,.btn:focus-visible,.tab:focus-visible,input:focus-visible{outline:3px solid var(--sand);outline-offset:2px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row > *{flex:1 1 140px}
+.note-box{font-size:.88rem;color:var(--muted);border-left:3px solid var(--sand);padding-left:10px;margin:0}
+
+.tide svg{width:100%;height:auto;display:block}
+.tide text{fill:var(--muted);font-family:var(--mono);font-size:11px}
+
+.check{display:flex;gap:12px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.check:first-child{border-top:0}
+.check input{width:22px;height:22px;accent-color:var(--bay);flex:none}
+.progress{height:8px;background:var(--bay-soft);border-radius:4px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--go);transition:width .2s}
+.share{font-family:var(--mono);font-size:.82rem;background:var(--bay-soft);border-radius:8px;padding:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+label.f{display:grid;gap:4px;font-size:.85rem;font-weight:700;color:var(--muted)}
+input[type=text],input[type=number],input[type=time],input[type=date]{font:inherit;font-size:1rem;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;width:100%;min-width:0}
+.doc{display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.doc:first-child{border-top:0}
+.doc .when{font-size:.85rem;font-weight:700}
+.doc input{grid-column:1 / -1}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:5}
+.tab{background:none;border:0;color:var(--muted);padding:12px 4px 14px;font-family:var(--display);font-size:1.1rem;font-weight:600;border-radius:0;border-top:3px solid transparent}
+.tab[aria-selected="true"]{color:var(--bay);border-top-color:var(--bay)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <div class="eyebrow">Navegação em Paraty · <span id="hoje"></span></div>
+      <h1>Limar</h1>
+    </div>
+    <span class="status" id="status">Carregando…</span>
+  </header>
+
+  <!-- HOJE -->
+  <section id="v-hoje" class="view">
+    <div style="display:grid;gap:18px">
+      <div class="verdict">
+        <div class="q">Dá pra sair hoje?</div>
+        <div class="a" id="vd-a">Buscando previsão…</div>
+        <div id="vd-txt">Próximas 6 horas, vento e mar em cada ponto.</div>
+        <div class="stats">
+          <div><b class="num" id="vd-w">—</b><span id="vd-wl">Vento no cais</span></div>
+          <div><b class="num" id="vd-g">—</b><span>Rajada</span></div>
+          <div><b class="num" id="vd-r">—</b><span>Chance de chuva</span></div>
+        </div>
+      </div>
+
+      <div style="display:grid;gap:10px">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <h2>Pontos de passeio</h2><span class="legend">pior momento nas próximas 6 h</span>
+        </div>
+        <div class="list" id="spots"></div>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <h2>Vento no cais</h2><span class="legend">nós · a cada 2 h · número de cima é a rajada</span>
+        </div>
+        <div class="hours" id="hours"></div>
+      </div>
+
+      <div class="row"><button id="refresh" type="button">Atualizar previsão</button></div>
+      <p class="note-box">Previsão de modelo numérico (Open-Meteo). Ajuda a planejar, mas não substitui o boletim da Marinha nem o olho do mestre. Os limites de bom, atenção e não ir são provisórios e vão ser ajustados com os barqueiros.</p>
+    </div>
+  </section>
+
+  <!-- NAVEGAR -->
+  <section id="v-navegar" class="view" hidden>
+    <div style="display:grid;gap:18px">
+      <div class="panel">
+        <div class="eyebrow">Velocidade pelo GPS</div>
+        <div class="speed"><div class="big" id="spd">0,0</div><div class="unit">nós</div></div>
+        <div class="grid2">
+          <div class="cell"><span>Rumo</span><b id="hdg">—</b></div>
+          <div class="cell"><span>Média</span><b id="avg">0,0 kn</b></div>
+          <div class="cell"><span>Máxima</span><b id="vmax">0,0 kn</b></div>
+          <div class="cell"><span>Distância</span><b id="dist">0,00 mn</b></div>
+          <div class="cell"><span>Tempo</span><b id="tempo">00:00</b></div>
+          <div class="cell"><span>Precisão</span><b id="acc">—</b></div>
+        </div>
+        <div class="cell"><span>Posição</span><b id="pos">—</b></div>
+        <div class="row">
+          <button id="gps-start" type="button">Iniciar viagem</button>
+          <button id="gps-stop" class="ghost" type="button" disabled>Encerrar</button>
+        </div>
+        <p class="legend" id="gps-msg" style="margin:0">Toque em Iniciar e permita o acesso à localização. A tela fica acesa enquanto a viagem está ativa.</p>
+      </div>
+      <div class="panel">
+        <h2>Profundidade</h2>
+        <p class="note-box">O celular não mede profundidade. Isso depende da ecossonda do barco e da carta náutica. Numa próxima versão, o app pode avisar ao chegar perto de lajes e bancos de areia marcados pelos próprios barqueiros.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARÉ -->
+  <section id="v-mare" class="view" hidden>
+    <div style="display:grid;gap:18px">
+      <div class="panel tide">
+        <h2>Maré de hoje</h2>
+        <svg viewBox="0 0 340 175" role="img" aria-label="Curva da maré do dia" id="tidesvg"></svg>
+        <div class="grid2" id="tidelist"></div>
+        <p class="note-box">Estimativa do modelo para a entrada da baía, em metros em relação ao nível médio do mar. Os horários batem bem; a altura pode variar. Antes de passar em lugar raso, confira a <a href="https://www.marinha.mil.br/chm/tabuas-de-mare" target="_blank" rel="noopener">Tábua das Marés oficial da Marinha</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- BORDO -->
+  <section id="v-bordo" class="view" hidden>
+    <div style="display:grid;gap:18px">
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><h2>Antes de sair</h2><span class="num legend" id="cnt">0/7</span></div>
+        <div class="progress"><i id="bar" style="width:0%"></i></div>
+        <div id="checks"></div>
+        <button class="ghost" id="chk-reset" type="button">Limpar para a próxima saída</button>
+      </div>
+
+      <div class="panel">
+        <h2>Avisar a rota</h2>
+        <div class="grid2">
+          <label class="f">Barco<input type="text" id="f-barco" placeholder="Nome do barco"></label>
+          <label class="f">Pessoas a bordo<input type="number" id="f-pax" inputmode="numeric" min="1" placeholder="8"></label>
+        </div>
+        <label class="f">Roteiro<input type="text" id="f-rota" placeholder="Ilha Comprida, Lagoa Azul, Praia Vermelha"></label>
+        <label class="f">Volta prevista<input type="time" id="f-volta"></label>
+        <div class="share" id="sharetxt"></div>
+        <div class="row">
+          <button id="share-loc" class="ghost" type="button">Incluir minha localização</button>
+          <a class="btn" id="share-wa" href="#" target="_blank" rel="noopener">Enviar no WhatsApp</a>
+        </div>
+        <span class="legend" id="share-msg" aria-live="polite"></span>
+      </div>
+
+      <div class="panel">
+        <h2>Vencimentos</h2>
+        <div id="docs"></div>
+        <p class="legend" style="margin:0">As datas ficam guardadas só neste celular.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<nav class="tabs" role="tablist" aria-label="Seções">
+  <button class="tab" role="tab" data-v="hoje" aria-selected="true">Hoje</button>
+  <button class="tab" role="tab" data-v="navegar" aria-selected="false">Navegar</button>
+  <button class="tab" role="tab" data-v="mare" aria-selected="false">Maré</button>
+  <button class="tab" role="tab" data-v="bordo" aria-selected="false">Bordo</button>
+</nav>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const fmt=(n,d=1)=>(n==null||isNaN(n))?'—':Number(n).toFixed(d).replace('.',',');
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const DIR16=['N','NNE','NE','ENE','L','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+const dirTxt=g=>g==null?'':DIR16[Math.round(((g%360)+360)%360/22.5)%16];
+const TZ='America/Sao_Paulo';
+$('hoje').textContent=new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'numeric',month:'short',timeZone:TZ}).format(new Date());
+
+/* ---------- Pontos ---------- */
+// Coordenadas aproximadas; o modelo de vento trabalha em grade de alguns km.
+const CAIS={lat:-23.2185,lon:-44.7125};
+const BAIA={lat:-23.20,lon:-44.60};          // ponto de mar aberto da baía para onda e maré
+const SPOTS=[
+  {n:'Ilha Comprida',note:'Baía abrigada',lat:-23.205,lon:-44.665,open:false},
+  {n:'Lagoa Azul · Ilha da Cotia',note:'Baía abrigada',lat:-23.170,lon:-44.655,open:false},
+  {n:'Praia Vermelha',note:'Baía abrigada',lat:-23.160,lon:-44.680,open:false},
+  {n:'Saco do Mamanguá',note:'Atenção à maré no fundo do saco',lat:-23.280,lon:-44.640,open:false},
+  {n:'Ilha do Algodão',note:'Mais exposta ao vento',lat:-23.170,lon:-44.590,open:false},
+  {n:'Praia do Sono',note:'Mar aberto',lat:-23.345,lon:-44.630,open:true},
+  {n:'Trindade · Caixa d’Aço',note:'Mar aberto',lat:-23.360,lon:-44.715,open:true}
+];
+// Regras provisórias (a ajustar com os barqueiros)
+const RULE={gustWarn:15,gustStop:24,waveWarn:1.2,waveStop:2.0,rainWarn:70};
+
+function classify(gust,wave,rain,storm,heavy,open){
+  let s='go',why=[];
+  if(gust>=RULE.gustStop){s='stop';why.push('rajada forte')}else if(gust>=RULE.gustWarn){s='warn';why.push('rajada')}
+  if(open&&wave!=null){if(wave>=RULE.waveStop){s='stop';why.push('mar grosso')}else if(wave>=RULE.waveWarn){if(s==='go')s='warn';why.push('ondulação')}}
+  if(storm){if(s==='go')s='warn';why.push('trovoada')}
+  else if(heavy){if(s==='go')s='warn';why.push('chuva forte')}
+  else if(rain>=RULE.rainWarn)why.push('garoa ou chuva fraca');
+  return {s,why};
+}
+
+/* ---------- Busca de dados ---------- */
+const join=(arr,k)=>arr.map(p=>p[k].toFixed(4)).join(',');
+function urlWeather(){
+  const pts=[CAIS,...SPOTS];
+  return 'https://api.open-meteo.com/v1/forecast?latitude='+join(pts,'lat')+'&longitude='+join(pts,'lon')+
+  '&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation_probability,weather_code'+
+  '&wind_speed_unit=kn&timezone='+encodeURIComponent(TZ)+'&forecast_days=2';
+}
+function urlMarine(pts){
+  return 'https://marine-api.open-meteo.com/v1/marine?latitude='+join(pts,'lat')+'&longitude='+join(pts,'lon')+
+  '&hourly=wave_height,swell_wave_height,sea_level_height_msl&timezone='+encodeURIComponent(TZ)+'&forecast_days=2';
+}
+const asArr=x=>Array.isArray(x)?x:[x];
+async function getJSON(u){const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
+
+async function load(force){
+  const cached=store.get('np-data',null);
+  if(cached&&!force&&Date.now()-cached.t<20*60*1000){render(cached,false);return}
+  if(cached)render(cached,false);
+  setStatus('Atualizando…','');
+  try{
+    const w=asArr(await getJSON(urlWeather()));
+    let m;
+    try{m=asArr(await getJSON(urlMarine([BAIA,...SPOTS])))}
+    catch(e){m=asArr(await getJSON(urlMarine([BAIA])))}
+    const data={t:Date.now(),w,m};
+    store.set('np-data',data);render(data,false);
+  }catch(e){
+    if(cached){render(cached,true)}
+    else{setStatus('Sem conexão','err');$('vd-a').textContent='Sem previsão';$('vd-txt').textContent='Conecte à internet para baixar a previsão antes de sair. Depois ela fica salva no celular.'}
+  }
+}
+function setStatus(t,c){const s=$('status');s.textContent=t;s.className='status'+(c?' '+c:'')}
+
+function hourIndex(loc){
+  const off=(loc.utc_offset_seconds||0)*1000, now=Date.now(), T=loc.hourly.time;
+  let i=0;for(let k=0;k<T.length;k++){if(Date.parse(T[k]+':00Z')-off<=now)i=k}
+  return i;
+}
+const hhmm=s=>s.slice(11,16);
+function maxIn(arr,a,b){let v=null,at=a;if(!arr)return {v,at};for(let k=a;k<=b&&k<arr.length;k++){if(arr[k]!=null&&(v==null||arr[k]>v)){v=arr[k];at=k}}return {v,at}}
+
+/* ---------- Render ---------- */
+const LAB={go:'Bom',warn:'Atenção',stop:'Não ir'};
+function render(d,offline){
+  const age=Math.round((Date.now()-d.t)/60000);
+  const when=new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:TZ}).format(new Date(d.t));
+  if(offline)setStatus('Sem sinal · dados das '+when,'old');
+  else setStatus(age<2?'Ao vivo · '+when:'Atualizado às '+when,age>90?'old':'');
+
+  const cais=d.w[0], i=hourIndex(cais), j=i+6, H=cais.hourly;
+  const mBay=d.m[0];
+  const waveFor=(n,mi)=>{const loc=d.m[n+1];const src=(loc&&loc.hourly&&loc.hourly.wave_height&&loc.hourly.wave_height[mi]!=null)?loc:mBay;return maxIn(src.hourly.wave_height,mi,mi+6).v};
+  const mi=hourIndex(mBay);
+
+  const results=SPOTS.map((p,n)=>{
+    const L=d.w[n+1].hourly, k=hourIndex(d.w[n+1]);
+    const g=maxIn(L.wind_gusts_10m,k,k+6), w=maxIn(L.wind_speed_10m,k,k+6);
+    const r=maxIn(L.precipitation_probability,k,k+6).v||0;
+    let storm=false,heavy=false;for(let q=k;q<=k+6;q++){const wc=L.weather_code[q]||0;if(wc>=95)storm=true;if([63,65,81,82].includes(wc))heavy=true}
+    const wave=waveFor(n,mi);
+    const c=classify(g.v||0,wave,r,storm,heavy,p.open);
+    return {...p,...c,wind:w.v,gust:g.v,gustAt:L.time[g.at],wave,dir:L.wind_direction_10m[k]};
+  });
+
+  $('spots').innerHTML=results.map(p=>`
+    <div class="spot ${p.s}">
+      <span class="dot" aria-hidden="true"></span>
+      <div style="min-width:0"><div class="name">${p.n}</div><div class="note">${p.why.length?cap(p.why.join(', '))+(p.s!=='go'&&p.gust>=RULE.gustWarn?' perto das '+hhmm(p.gustAt):''):p.note}</div></div>
+      <div style="text-align:right;display:grid;gap:4px;justify-items:end"><span class="pill">${LAB[p.s]}</span>
+      <span class="metrics num">${fmt(p.wind,0)}–${fmt(p.gust,0)} kn${p.open?' · '+fmt(p.wave)+' m':''}</span></div>
+    </div>`).join('');
+
+  const shel=results.filter(p=>!p.open), open=results.filter(p=>p.open);
+  const worst=a=>a.some(p=>p.s==='stop')?'stop':a.some(p=>p.s==='warn')?'warn':'go';
+  const ws=worst(shel), wo=worst(open);
+  let a,t;
+  if(ws==='go'&&wo==='go'){a='Sim, mar tranquilo';t='Vento fraco e mar bom em todos os pontos nas próximas horas.'}
+  else if(ws==='go'){a='Sim, dentro da baía';t='Para fora da baía ('+open.filter(p=>p.s!=='go').map(p=>p.n.split(' ·')[0]).join(', ')+'), '+(wo==='stop'?'melhor não ir agora.':'vá com atenção.')}
+  else if(ws==='warn'){a='Com atenção';t='Rajadas ou chuva em parte da baía. Veja os pontos abaixo.'}
+  else {a='Melhor esperar';t='Vento forte dentro da baía nas próximas horas.'}
+  $('vd-a').textContent=a;$('vd-txt').textContent=t;
+  $('vd-w').textContent=fmt(H.wind_speed_10m[i],0)+' kn';$('vd-wl').textContent='Vento '+dirTxt(H.wind_direction_10m[i])+' no cais';
+  $('vd-g').textContent=fmt(H.wind_gusts_10m[i],0)+' kn';
+  $('vd-r').textContent=(H.precipitation_probability[i]??'—')+'%';
+
+  // barras do cais
+  const idx=[];for(let k=i;k<H.time.length&&idx.length<8;k+=2)idx.push(k);
+  const top=Math.max(20,...idx.map(k=>H.wind_gusts_10m[k]||0));
+  $('hours').innerHTML=idx.map(k=>{const v=H.wind_speed_10m[k],g=H.wind_gusts_10m[k];
+    const cls=g>=RULE.gustStop?'max':g>=RULE.gustWarn?'hi':'';
+    return `<div class="bar"><span class="num">${fmt(g,0)}</span><div class="col"><div class="fill ${cls}" style="height:${Math.max(4,v/top*100)}%"></div></div><span class="num">${fmt(v,0)}</span><span class="dir">${hhmm(H.time[k]).slice(0,2)}h</span></div>`}).join('');
+
+  renderTide(mBay);
+}
+const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+function renderTide(loc){
+  const T=loc.hourly.time, S=loc.hourly.sea_level_height_msl;
+  if(!S||S.every(v=>v==null)){$('tidesvg').innerHTML='';$('tidelist').innerHTML='<p class="legend">Maré indisponível agora.</p>';return}
+  const day=T[hourIndex(loc)].slice(0,10);
+  const pts=[];T.forEach((t,k)=>{if(t.slice(0,10)===day&&S[k]!=null)pts.push([+t.slice(11,13),S[k],k])});
+  // extremos usando vizinhos (inclui horas do dia seguinte/anterior)
+  const ext=[];
+  for(let k=1;k<S.length-1;k++){if(T[k].slice(0,10)!==day||S[k]==null)continue;
+    if(S[k]>=S[k-1]&&S[k]>S[k+1])ext.push(['Preamar',k]);
+    if(S[k]<=S[k-1]&&S[k]<S[k+1])ext.push(['Baixa-mar',k]);}
+  const vals=pts.map(p=>p[1]);let lo=Math.floor(Math.min(...vals)*2)/2,hi=Math.ceil(Math.max(...vals)*2)/2;if(hi-lo<0.5)hi=lo+0.5;
+  const L=34,R=330,Tp=12,B=145, x=h=>L+(R-L)*h/23, y=v=>B-(B-Tp)*(v-lo)/(hi-lo);
+  const d=pts.map((p,n)=>(n?'L':'M')+x(p[0]).toFixed(1)+' '+y(p[1]).toFixed(1)).join(' ');
+  const ticks=[];for(let v=lo;v<=hi+1e-9;v+=0.5)ticks.push(+v.toFixed(1));
+  const off=(loc.utc_offset_seconds||0)*1000;const nowLocal=new Date(Date.now()+off);const nh=nowLocal.getUTCHours()+nowLocal.getUTCMinutes()/60;
+  const nowV=(()=>{const a=Math.floor(nh),b=Math.min(23,a+1),pa=pts.find(p=>p[0]===a),pb=pts.find(p=>p[0]===b);return pa&&pb?pa[1]+(pb[1]-pa[1])*(nh-a):pa?pa[1]:null})();
+  $('tidesvg').innerHTML=`<g stroke="var(--line)" stroke-width="1">${ticks.map(v=>`<line x1="${L}" x2="${R}" y1="${y(v)}" y2="${y(v)}"/>`).join('')}</g>
+  ${ticks.map(v=>`<text x="${L-5}" y="${y(v)+4}" text-anchor="end">${fmt(v)}</text>`).join('')}
+  ${[0,6,12,18,23].map(h=>`<text x="${x(h)}" y="${B+18}" text-anchor="middle">${h}h</text>`).join('')}
+  <path d="${d} L${x(pts[pts.length-1][0])} ${B} L${x(pts[0][0])} ${B} Z" fill="var(--bay-soft)"/>
+  <path d="${d}" fill="none" stroke="var(--bay)" stroke-width="2.5"/>
+  ${nowV!=null?`<line x1="${x(nh)}" x2="${x(nh)}" y1="${Tp}" y2="${B}" stroke="var(--sand)" stroke-width="2"/>
+  <circle cx="${x(nh)}" cy="${y(nowV)}" r="5" fill="var(--sand)" stroke="var(--surface)" stroke-width="2"/>
+  <text x="${Math.min(x(nh)+8,R-30)}" y="${Tp+10}">agora</text>`:''}`;
+  $('tidelist').innerHTML=ext.length?ext.map(([n,k])=>`<div class="cell"><span>${n}</span><b>${hhmm(T[k])} · ${fmt(S[k])} m</b></div>`).join(''):'<p class="legend">Sem extremos claros hoje.</p>';
+}
+
+/* ---------- GPS ---------- */
+const R_NM=3440.065;
+const rad=d=>d*Math.PI/180;
+function hav(a,b){const dl=rad(b.lat-a.lat),dn=rad(b.lon-a.lon);const h=Math.sin(dl/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dn/2)**2;return 2*R_NM*Math.asin(Math.sqrt(h))}
+function bearing(a,b){const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat)),x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return (Math.atan2(y,x)*180/Math.PI+360)%360}
+function dm(v,pos,neg){const s=v<0?neg:pos;v=Math.abs(v);const g=Math.floor(v),m=(v-g)*60;return g+'°'+m.toFixed(2).replace('.',',')+"'"+s}
+let watch=null,last=null,t0=0,dist=0,vmax=0,spd=0,tick=null,lock=null,lastFix=store.get('np-lastfix',null);
+async function keepAwake(){try{if('wakeLock' in navigator)lock=await navigator.wakeLock.request('screen')}catch(e){}}
+document.addEventListener('visibilitychange',()=>{if(watch!=null&&document.visibilityState==='visible')keepAwake()});
+function drawNav(){
+  $('spd').textContent=fmt(spd);
+  const el=t0?(Date.now()-t0)/1000:0;
+  $('avg').textContent=fmt(el>10?dist/(el/3600):0)+' kn';
+  $('vmax').textContent=fmt(vmax)+' kn';
+  $('dist').textContent=fmt(dist,2)+' mn';
+  const h=Math.floor(el/3600),m=Math.floor(el%3600/60),s=Math.floor(el%60);
+  $('tempo').textContent=(h?h+':':'')+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function onPos(p){
+  const c=p.coords,cur={lat:c.latitude,lon:c.longitude,t:p.timestamp};
+  let v=c.speed!=null&&c.speed>=0?c.speed*1.943844:null;
+  if(last){const d=hav(last,cur),dt=(cur.t-last.t)/3600000;
+    if(c.accuracy<=40&&d*1852>Math.max(3,c.accuracy*0.3)){dist+=d;if(v==null&&dt>0)v=d/dt;
+      const hd=(c.heading!=null&&!isNaN(c.heading)&&v>1)?c.heading:bearing(last,cur);$('hdg').textContent=Math.round(hd)+'° '+dirTxt(hd);last=cur}
+  }else last=cur;
+  if(v!=null){spd=spd?spd*0.5+v*0.5:v;if(spd<0.3)spd=0;if(spd>vmax&&c.accuracy<=40)vmax=spd}
+  $('acc').textContent='± '+Math.round(c.accuracy)+' m';
+  $('pos').textContent=dm(c.latitude,'N','S')+'  '+dm(c.longitude,'L','O');
+  lastFix={lat:c.latitude,lon:c.longitude,t:Date.now()};store.set('np-lastfix',lastFix);
+  $('gps-msg').textContent='GPS ativo.';
+  drawNav();
+}
+function onErr(e){$('gps-msg').textContent=e.code===1?'Localização bloqueada. Libere o acesso à localização para este app nos ajustes do celular.':'Procurando sinal de GPS…'}
+$('gps-start').onclick=()=>{
+  if(!('geolocation' in navigator)){$('gps-msg').textContent='Este navegador não tem GPS disponível.';return}
+  last=null;dist=0;vmax=0;spd=0;t0=Date.now();$('hdg').textContent='—';
+  watch=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,maximumAge:1000,timeout:20000});
+  tick=setInterval(drawNav,1000);keepAwake();
+  $('gps-start').disabled=true;$('gps-stop').disabled=false;$('gps-msg').textContent='Procurando sinal de GPS…';
+};
+$('gps-stop').onclick=()=>{
+  if(watch!=null)navigator.geolocation.clearWatch(watch);watch=null;clearInterval(tick);
+  try{lock&&lock.release()}catch(e){}lock=null;spd=0;drawNav();
+  $('gps-start').disabled=false;$('gps-stop').disabled=true;
+  $('gps-msg').textContent='Viagem encerrada: '+fmt(dist,2)+' milhas em '+$('tempo').textContent+'.';
+};
+drawNav();
+
+/* ---------- Bordo ---------- */
+const ITEMS=['Coletes para todos a bordo','Extintor no lugar e na validade','Combustível conferido','Rádio VHF testado','Âncora e cabo','Lista de passageiros preenchida','Rota avisada para alguém em terra'];
+let done=store.get('np-chk',{});
+function renderChecks(){
+  $('checks').innerHTML=ITEMS.map((t,i)=>`<label class="check"><input type="checkbox" id="c${i}" ${done[i]?'checked':''}><span>${t}</span></label>`).join('');
+  const n=ITEMS.filter((_,i)=>done[i]).length;$('cnt').textContent=n+'/'+ITEMS.length;$('bar').style.width=(n/ITEMS.length*100)+'%';
+  ITEMS.forEach((_,i)=>$('c'+i).onchange=e=>{done[i]=e.target.checked;store.set('np-chk',done);renderChecks()});
+}
+$('chk-reset').onclick=()=>{done={};store.set('np-chk',done);renderChecks()};
+renderChecks();
+
+const FORM=['barco','pax','rota','volta'];
+const fv=store.get('np-form',{});FORM.forEach(k=>{if(fv[k])$('f-'+k).value=fv[k];$('f-'+k).oninput=()=>{fv[k]=$('f-'+k).value;store.set('np-form',fv);buildShare()}});
+let shareLoc=null;
+function buildShare(){
+  const L=['Saindo agora de Paraty'];
+  if(fv.barco)L.push('Barco: '+fv.barco+(fv.pax?' · '+fv.pax+' pessoas':''));else if(fv.pax)L.push(fv.pax+' pessoas a bordo');
+  if(fv.rota)L.push('Roteiro: '+fv.rota);
+  if(fv.volta)L.push('Volta prevista: '+fv.volta);
+  if(shareLoc)L.push('Posição: https://maps.google.com/?q='+shareLoc.lat.toFixed(5)+','+shareLoc.lon.toFixed(5));
+  const txt=L.join('\n');$('sharetxt').textContent=txt;$('share-wa').href='https://wa.me/?text='+encodeURIComponent(txt);
+}
+$('share-loc').onclick=()=>{
+  if(!('geolocation' in navigator)){$('share-msg').textContent='GPS indisponível.';return}
+  $('share-msg').textContent='Pegando sua posição…';
+  navigator.geolocation.getCurrentPosition(p=>{shareLoc={lat:p.coords.latitude,lon:p.coords.longitude};$('share-msg').textContent='Posição incluída.';buildShare()},
+    ()=>{if(lastFix){shareLoc=lastFix;$('share-msg').textContent='Sem sinal agora. Usei a última posição conhecida.';buildShare()}else $('share-msg').textContent='Não consegui a posição. Libere a localização nos ajustes.'},
+    {enableHighAccuracy:true,timeout:15000,maximumAge:60000});
+};
+buildShare();
+
+const DOCS=['Habilitação (Arrais / Mestre)','Seguro DPEM','Vistoria da embarcação','Extintor','Kit de primeiros socorros'];
+const dates=store.get('np-docs',{});
+function renderDocs(){
+  const today=new Date();today.setHours(0,0,0,0);
+  $('docs').innerHTML=DOCS.map((n,i)=>{const v=dates[i];let w='Definir data',c='var(--muted)';
+    if(v){const days=Math.round((new Date(v+'T00:00:00')-today)/864e5);
+      if(days<0){w='Vencido';c='var(--stop)'}else if(days<=30){w='Vence em '+days+(days===1?' dia':' dias');c='var(--warn)'}
+      else{w=new Intl.DateTimeFormat('pt-BR',{month:'short',year:'numeric'}).format(new Date(v+'T12:00:00'));c='var(--go)'}}
+    return `<div class="doc"><span>${n}</span><span class="when num" style="color:${c}">${w}</span><input type="date" id="d${i}" value="${v||''}" aria-label="Validade de ${n}"></div>`}).join('');
+  DOCS.forEach((_,i)=>$('d'+i).onchange=e=>{dates[i]=e.target.value;store.set('np-docs',dates);renderDocs()});
+}
+renderDocs();
+
+/* ---------- Abas ---------- */
+const tabs=[...document.querySelectorAll('.tab')];
+function show(v){tabs.forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='v-'+v);window.scrollTo(0,0);store.set('np-tab',v)}
+tabs.forEach(t=>t.onclick=()=>show(t.dataset.v));
+show(store.get('np-tab','hoje')==='navegar'?'hoje':store.get('np-tab','hoje'));
+
+$('refresh').onclick=()=>load(true);
+load(false);
+setInterval(()=>{if(document.visibilityState==='visible')load(false)},10*60*1000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load(false)});
+
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+</script>
+</body>
+</html>
