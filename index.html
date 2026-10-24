@@ -548,10 +548,10 @@ const Carta=(()=>{
   const RE=6378137,ORIG=Math.PI*RE;
   const mX=lon=>lon*Math.PI/180*RE, mY=lat=>RE*Math.log(Math.tan(Math.PI/4+lat*Math.PI/360));
   const res=z=>2*ORIG/(256*Math.pow(2,z));
-  const MINZ=11,MAXZ=18;
+  const MINZ=11,MAXZ=17;
   const el=$('map'),layer=$('tiles');
   let info=null,W=0,H=0;
-  let cx=mX(-44.665),cy=mY(-23.215),zoom=13.3;   // começa na baía de Paraty
+  let cx=mX(-44.672),cy=mY(-23.225),zoom=12.6;   // começa mostrando a baía de Paraty e o Mamanguá
   const sv=store.get('np-map',null);if(sv){cx=sv.cx;cy=sv.cy;zoom=sv.z}
   let follow=false,fix=null,watchId=null,raf=0;
   const imgs=new Map();
