@@ -126,6 +126,11 @@ input[type=text],input[type=number],input[type=time],input[type=date]{font:inher
 .scale i{display:block;height:4px;border:2px solid #0d2a33;border-top:0;margin-top:2px}
 .mapmsg{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;background:rgba(13,42,51,.9);color:#fff;font-size:.8rem;padding:6px 10px;border-radius:8px;max-width:90%;text-align:center}
 .dl{display:grid;gap:8px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--bay-soft);border-radius:10px;padding:3px;gap:3px}
+.seg button{background:transparent;color:var(--ink);border:0;border-radius:8px;padding:9px 4px;font-size:.88rem}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--bay);box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.attr{position:absolute;right:6px;bottom:6px;z-index:4;font-size:.6rem;color:#fff;background:rgba(0,0,0,.45);padding:2px 5px;border-radius:3px;pointer-events:none;max-width:70%;text-align:right}
+.map.satbg{background:#1c2a2e}
 .dlbar{height:8px;background:var(--bay-soft);border-radius:4px;overflow:hidden}
 .dlbar i{display:block;height:100%;width:0;background:var(--bay);transition:width .2s}
 
@@ -181,7 +186,12 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
   <!-- CARTA -->
   <section id="v-carta" class="view" hidden>
     <div style="display:grid;gap:14px">
-      <div class="map" id="map" aria-label="Carta náutica da baía de Paraty">
+      <div class="seg" role="group" aria-label="Tipo de mapa">
+        <button type="button" data-mode="hib" aria-pressed="false">Satélite + carta</button>
+        <button type="button" data-mode="sat" aria-pressed="false">Satélite</button>
+        <button type="button" data-mode="carta" aria-pressed="false">Carta</button>
+      </div>
+      <div class="map" id="map" aria-label="Mapa da baía de Paraty">
         <div class="tiles" id="tiles"></div>
         <div class="boat" id="boat" hidden><div class="acc" id="boat-acc"></div>
           <svg viewBox="0 0 30 30" id="boat-ico"><circle cx="15" cy="15" r="7" fill="#e9b949" stroke="#0d2a33" stroke-width="2.5"/></svg></div>
@@ -194,6 +204,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
         </div>
         <div class="scale" id="scale"></div>
         <div class="mapmsg" id="mapmsg" hidden></div>
+        <div class="attr" id="attr" hidden>Imagens: Esri, Maxar, Earthstar Geographics · Powered by Esri</div>
       </div>
       <div class="panel dl">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
@@ -203,7 +214,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
         <div class="dlbar" hidden id="dl-bar"><i></i></div>
         <button type="button" id="dl-btn">Baixar carta e previsão</button>
       </div>
-      <p class="note-box">Cartas 1633 (Baía da Ilha Grande, Parte Oeste, com o plano da Baía de Parati) e 1634 (Da Ponta de Juatinga à Ilha das Couves) © Marinha do Brasil, DHN/CHM. Profundidades em metros, reduzidas ao nível de redução. Uso informativo e não comercial: não substitui a carta oficial atualizada pelos Avisos aos Navegantes.</p>
+      <p class="note-box">Satélite: Esri World Imagery (precisa de internet). Sem sinal, o app mostra a carta salva no celular. Cartas 1633 (Baía da Ilha Grande, Parte Oeste, com o plano da Baía de Parati) e 1634 (Da Ponta de Juatinga à Ilha das Couves) © Marinha do Brasil, DHN/CHM. Profundidades em metros, reduzidas ao nível de redução. Uso informativo e não comercial: não substitui a carta oficial atualizada pelos Avisos aos Navegantes.</p>
     </div>
   </section>
 
@@ -548,7 +559,18 @@ const Carta=(()=>{
   const RE=6378137,ORIG=Math.PI*RE;
   const mX=lon=>lon*Math.PI/180*RE, mY=lat=>RE*Math.log(Math.tan(Math.PI/4+lat*Math.PI/360));
   const res=z=>2*ORIG/(256*Math.pow(2,z));
-  const MINZ=11,MAXZ=17;
+  const MINZ=11;
+  const SAT_KEY='AAPTaQcmeCJKj82YykKbBv8rDiA..LahyGDtOODD9rfAMmczl1a5XQ55Zpd5cxkKoMRJtP5cwsSLAqDB66QmsEsFRw5a0Pnnnpmg89c3GDZOkl64CQJTTp8bFiV625ha3Qen9c1QE1W4RR883NWH1TX8GKax_gxCfPg_YFIqrZyZi6aN_7INgiQTiufkcgSMJTgktXIbibm-uwFbeKBdCVV04Or3Ggx-sQykU4DfKwuohzOX4UwQYsS2sQTxM49fun0dQimY1sEksIOnX0pY.AT1_9bNYcZXJ';
+  const satUrl=(z,x,y)=>`https://ibasemaps-api.arcgis.com/arcgis/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}?token=${SAT_KEY}`;
+  let mode=store.get('np-mapmode','hib'),satFails=0,satDown=false;
+  const satOK=()=>!satDown&&navigator.onLine!==false;
+  const effMode=()=>mode!=='carta'&&!satOK()?'carta':mode;
+  const maxZ=()=>effMode()==='carta'?17:19;
+  function setMode(m){mode=m;store.set('np-mapmode',m);document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
+    if(m!=='carta'&&!satOK())msg('Sem internet: mostrando a carta salva.');else msg('');req()}
+  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{satDown=false;satFails=0;setMode(b.dataset.mode)});
+  window.addEventListener('online',()=>{satDown=false;satFails=0;req()});
+  window.addEventListener('offline',()=>{if(mode!=='carta')msg('Sem internet: mostrando a carta salva.');req()});
   const el=$('map'),layer=$('tiles');
   let info=null,W=0,H=0;
   let cx=mX(-44.680),cy=mY(-23.205),zoom=12.7;   // começa mostrando a baía de Paraty
@@ -557,15 +579,17 @@ const Carta=(()=>{
   const imgs=new Map();
   const have=new Set();
   fetch('cartas/cartas.json').then(r=>r.json()).then(j=>{info=j;j.tiles.forEach(t=>have.add(t));
-    $('dl-size').textContent=fmt(j.bytes/1e6,1)+' MB';draw();checkSaved()}).catch(()=>{msg('Carta indisponível sem internet. Baixe antes de sair.')});
+    $('dl-size').textContent=fmt(j.bytes/1e6,1)+' MB';(j.hib||[]).forEach(t=>have.add(t));setMode(mode);draw();checkSaved()}).catch(()=>{msg('Carta indisponível sem internet. Baixe antes de sair.')});
   function msg(t){const m=$('mapmsg');if(!t){m.hidden=true;return}m.textContent=t;m.hidden=false}
   function layersFor(z){
-    // base: z11..15 · detalhe do plano da Baía de Parati: z16
-    const L=[{name:'base',lz:Math.min(15,Math.max(11,Math.floor(z+0.3)))}];
-    if(z>=15.5)L.push({name:'det',lz:16});
+    const m=effMode(),cz=Math.min(15,Math.max(11,Math.floor(z+0.3))),L=[];
+    if(m!=='carta')L.push({name:'sat',lz:Math.min(19,Math.max(0,Math.floor(z+0.3))),remote:true,zi:0});
+    if(m==='carta'){L.push({name:'base',lz:cz,zi:1});if(z>=15.5)L.push({name:'det',lz:16,zi:2})}
+    if(m==='hib'){L.push({name:'hib',lz:cz,zi:1,op:.92});if(z>=15.5&&z<18.5)L.push({name:'hibdet',lz:16,zi:2,op:.92})}
     return L;
   }
   function draw(){raf=0;if(!info||el.offsetParent===null)return;
+    if(zoom>maxZ())zoom=maxZ();
     W=el.clientWidth;H=el.clientHeight;
     const r=res(zoom),left=cx-W/2*r,top=cy+H/2*r;
     const want=new Set();
@@ -574,15 +598,18 @@ const Carta=(()=>{
       const tx0=Math.floor((left+ORIG)/(256*lr)),tx1=Math.floor((left+W*r+ORIG)/(256*lr));
       const ty0=Math.floor((ORIG-top)/(256*lr)),ty1=Math.floor((ORIG-(top-H*r))/(256*lr));
       for(let x=tx0;x<=tx1;x++)for(let y=ty0;y<=ty1;y++){
-        const key=`${L.name}/${L.lz}/${x}/${y}.webp`;if(!have.has(key))continue;want.add(key);
+        const key=`${L.name}/${L.lz}/${x}/${y}.webp`;if(!L.remote&&!have.has(key))continue;want.add(key);
         let im=imgs.get(key);
-        if(!im){im=new Image();im.decoding='async';im.alt='';im.src='cartas/'+key;im.style.zIndex=L.name==='det'?2:1;imgs.set(key,im);layer.appendChild(im)}
+        if(!im){im=new Image();im.decoding='async';im.alt='';im.style.zIndex=L.zi;if(L.op)im.style.opacity=L.op;
+          if(L.remote){im.referrerPolicy='strict-origin-when-cross-origin';im.onerror=()=>{if(++satFails>=6||navigator.onLine===false){if(!satDown){satDown=true;msg('Satélite indisponível agora. Mostrando a carta salva.');req()}}};im.onload=()=>{satFails=0}}
+          im.src=L.remote?satUrl(L.lz,x,y):'cartas/'+key;imgs.set(key,im);layer.appendChild(im)}
         const px=(x*256*lr-ORIG-left)/r, py=(top-(ORIG-y*256*lr))/r;
         im.style.left=px.toFixed(1)+'px';im.style.top=py.toFixed(1)+'px';
         im.style.width=im.style.height=(ts+0.6).toFixed(1)+'px';
       }
     }
     for(const [k,im] of imgs)if(!want.has(k)){im.remove();imgs.delete(k)}
+    const em=effMode();el.classList.toggle('satbg',em!=='carta');$('attr').hidden=em==='carta';
     // barco
     const b=$('boat');
     if(fix){const bx=(mX(fix.lon)-left)/r,by=(top-mY(fix.lat))/r;
@@ -602,7 +629,7 @@ const Carta=(()=>{
     try{store.set('np-map',{cx,cy,z:zoom})}catch(e){}
   }
   const req=()=>{if(!raf)raf=requestAnimationFrame(draw)};
-  function clampZ(z){return Math.max(MINZ,Math.min(MAXZ,z))}
+  function clampZ(z){return Math.max(MINZ,Math.min(maxZ(),z))}
   function zoomAt(nz,sx,sy){nz=clampZ(nz);const r=res(zoom),nr=res(nz);
     const wx=cx+(sx-W/2)*r, wy=cy-(sy-H/2)*r;cx=wx-(sx-W/2)*nr;cy=wy+(sy-H/2)*nr;zoom=nz;req()}
   function stopFollow(){if(follow){follow=false;$('m-gps').classList.remove('on')}}
