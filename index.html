@@ -109,7 +109,27 @@ input[type=text],input[type=number],input[type=time],input[type=date]{font:inher
 .doc .when{font-size:.85rem;font-weight:700}
 .doc input{grid-column:1 / -1}
 
-nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:5}
+/* Carta */
+.map{position:relative;height:calc(100dvh - 250px - env(safe-area-inset-bottom,0px) - env(safe-area-inset-top,0px));min-height:340px;border-radius:12px;overflow:hidden;background:#cfd8da;border:1px solid var(--line);touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.map .tiles{position:absolute;inset:0}
+.map img{position:absolute;max-width:none;image-rendering:auto;pointer-events:none}
+.boat{position:absolute;width:30px;height:30px;margin:-15px 0 0 -15px;pointer-events:none;z-index:3}
+.boat .acc{position:absolute;left:50%;top:50%;border-radius:50%;background:rgba(15,90,107,.15);border:1px solid rgba(15,90,107,.5);transform:translate(-50%,-50%)}
+.boat svg{position:absolute;inset:0;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.hud{position:absolute;left:8px;top:8px;z-index:4;display:grid;grid-template-columns:repeat(3,auto);gap:2px 12px;background:rgba(13,42,51,.86);color:#fff;border-radius:10px;padding:8px 10px;pointer-events:none}
+.hud b{font-family:var(--mono);font-size:1.05rem;font-variant-numeric:tabular-nums}
+.hud span{font-size:.62rem;letter-spacing:.08em;text-transform:uppercase;opacity:.8;font-weight:700}
+.mapbtns{position:absolute;right:8px;top:8px;z-index:4;display:grid;gap:6px}
+.mapbtns button{width:44px;height:44px;padding:0;font-size:1.3rem;line-height:1;border-radius:10px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.mapbtns button.on{background:var(--bay);color:var(--on-bay);border-color:var(--bay)}
+.scale{position:absolute;left:8px;bottom:8px;z-index:4;font-size:.7rem;font-weight:700;color:#0d2a33;background:rgba(255,255,255,.8);padding:2px 6px;border-radius:4px;pointer-events:none}
+.scale i{display:block;height:4px;border:2px solid #0d2a33;border-top:0;margin-top:2px}
+.mapmsg{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);z-index:4;background:rgba(13,42,51,.9);color:#fff;font-size:.8rem;padding:6px 10px;border-radius:8px;max-width:90%;text-align:center}
+.dl{display:grid;gap:8px}
+.dlbar{height:8px;background:var(--bay-soft);border-radius:4px;overflow:hidden}
+.dlbar i{display:block;height:100%;width:0;background:var(--bay);transition:width .2s}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(5,1fr);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:env(safe-area-inset-left,0px);padding-right:env(safe-area-inset-right,0px);z-index:5}
 .tab{background:none;border:0;color:var(--muted);padding:12px 4px 14px;font-family:var(--display);font-size:1.1rem;font-weight:600;border-radius:0;border-top:3px solid transparent}
 .tab[aria-selected="true"]{color:var(--bay);border-top-color:var(--bay)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -155,6 +175,35 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
 
       <div class="row"><button id="refresh" type="button">Atualizar previsão</button></div>
       <p class="note-box">Previsão de modelo numérico (Open-Meteo). Ajuda a planejar, mas não substitui o boletim da Marinha nem o olho do mestre. Os limites de bom, atenção e não ir são provisórios e vão ser ajustados com os barqueiros.</p>
+    </div>
+  </section>
+
+  <!-- CARTA -->
+  <section id="v-carta" class="view" hidden>
+    <div style="display:grid;gap:14px">
+      <div class="map" id="map" aria-label="Carta náutica da baía de Paraty">
+        <div class="tiles" id="tiles"></div>
+        <div class="boat" id="boat" hidden><div class="acc" id="boat-acc"></div>
+          <svg viewBox="0 0 30 30" id="boat-ico"><circle cx="15" cy="15" r="7" fill="#e9b949" stroke="#0d2a33" stroke-width="2.5"/></svg></div>
+        <div class="hud"><span>Veloc.</span><span>Rumo</span><span>Vento</span>
+          <b id="h-spd">—</b><b id="h-hdg">—</b><b id="h-wind">—</b></div>
+        <div class="mapbtns">
+          <button type="button" id="m-in" aria-label="Aproximar">+</button>
+          <button type="button" id="m-out" aria-label="Afastar">−</button>
+          <button type="button" id="m-gps" aria-label="Seguir minha posição">◎</button>
+        </div>
+        <div class="scale" id="scale"></div>
+        <div class="mapmsg" id="mapmsg" hidden></div>
+      </div>
+      <div class="panel dl">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <h2>Usar sem sinal</h2><span class="legend num" id="dl-size"></span>
+        </div>
+        <p class="legend" style="margin:0" id="dl-msg">Baixe a carta e a previsão antes de sair. No mar, sem internet, a carta abre do mesmo jeito com a sua posição.</p>
+        <div class="dlbar" hidden id="dl-bar"><i></i></div>
+        <button type="button" id="dl-btn">Baixar carta e previsão</button>
+      </div>
+      <p class="note-box">Cartas 1633 (Baía da Ilha Grande, Parte Oeste, com o plano da Baía de Parati) e 1634 (Da Ponta de Juatinga à Ilha das Couves) © Marinha do Brasil, DHN/CHM. Profundidades em metros, reduzidas ao nível de redução. Uso informativo e não comercial: não substitui a carta oficial atualizada pelos Avisos aos Navegantes.</p>
     </div>
   </section>
 
@@ -235,6 +284,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
 
 <nav class="tabs" role="tablist" aria-label="Seções">
   <button class="tab" role="tab" data-v="hoje" aria-selected="true">Hoje</button>
+  <button class="tab" role="tab" data-v="carta" aria-selected="false">Carta</button>
   <button class="tab" role="tab" data-v="navegar" aria-selected="false">Navegar</button>
   <button class="tab" role="tab" data-v="mare" aria-selected="false">Maré</button>
   <button class="tab" role="tab" data-v="bordo" aria-selected="false">Bordo</button>
@@ -370,6 +420,7 @@ function render(d,offline){
     return `<div class="bar"><span class="num">${fmt(g,0)}</span><div class="col"><div class="fill ${cls}" style="height:${Math.max(4,v/top*100)}%"></div></div><span class="num">${fmt(v,0)}</span><span class="dir">${hhmm(H.time[k]).slice(0,2)}h</span></div>`}).join('');
 
   renderTide(mBay);
+  try{Carta.windNow()}catch(e){}
 }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 
@@ -492,9 +543,140 @@ function renderDocs(){
 }
 renderDocs();
 
+/* ---------- Carta náutica ---------- */
+const Carta=(()=>{
+  const RE=6378137,ORIG=Math.PI*RE;
+  const mX=lon=>lon*Math.PI/180*RE, mY=lat=>RE*Math.log(Math.tan(Math.PI/4+lat*Math.PI/360));
+  const res=z=>2*ORIG/(256*Math.pow(2,z));
+  const MINZ=11,MAXZ=18;
+  const el=$('map'),layer=$('tiles');
+  let info=null,W=0,H=0;
+  let cx=mX(-44.665),cy=mY(-23.215),zoom=13.3;   // começa na baía de Paraty
+  const sv=store.get('np-map',null);if(sv){cx=sv.cx;cy=sv.cy;zoom=sv.z}
+  let follow=false,fix=null,watchId=null,raf=0;
+  const imgs=new Map();
+  const have=new Set();
+  fetch('cartas/cartas.json').then(r=>r.json()).then(j=>{info=j;j.tiles.forEach(t=>have.add(t));
+    $('dl-size').textContent=fmt(j.bytes/1e6,1)+' MB';draw();checkSaved()}).catch(()=>{msg('Carta indisponível sem internet. Baixe antes de sair.')});
+  function msg(t){const m=$('mapmsg');if(!t){m.hidden=true;return}m.textContent=t;m.hidden=false}
+  function layersFor(z){
+    // base: z11..15 · detalhe do plano da Baía de Parati: z16
+    const L=[{name:'base',lz:Math.min(15,Math.max(11,Math.floor(z+0.3)))}];
+    if(z>=15.5)L.push({name:'det',lz:16});
+    return L;
+  }
+  function draw(){raf=0;if(!info||el.offsetParent===null)return;
+    W=el.clientWidth;H=el.clientHeight;
+    const r=res(zoom),left=cx-W/2*r,top=cy+H/2*r;
+    const want=new Set();
+    for(const L of layersFor(zoom)){
+      const lr=res(L.lz),ts=256*lr/r;
+      const tx0=Math.floor((left+ORIG)/(256*lr)),tx1=Math.floor((left+W*r+ORIG)/(256*lr));
+      const ty0=Math.floor((ORIG-top)/(256*lr)),ty1=Math.floor((ORIG-(top-H*r))/(256*lr));
+      for(let x=tx0;x<=tx1;x++)for(let y=ty0;y<=ty1;y++){
+        const key=`${L.name}/${L.lz}/${x}/${y}.webp`;if(!have.has(key))continue;want.add(key);
+        let im=imgs.get(key);
+        if(!im){im=new Image();im.decoding='async';im.alt='';im.src='cartas/'+key;im.style.zIndex=L.name==='det'?2:1;imgs.set(key,im);layer.appendChild(im)}
+        const px=(x*256*lr-ORIG-left)/r, py=(top-(ORIG-y*256*lr))/r;
+        im.style.left=px.toFixed(1)+'px';im.style.top=py.toFixed(1)+'px';
+        im.style.width=im.style.height=(ts+0.6).toFixed(1)+'px';
+      }
+    }
+    for(const [k,im] of imgs)if(!want.has(k)){im.remove();imgs.delete(k)}
+    // barco
+    const b=$('boat');
+    if(fix){const bx=(mX(fix.lon)-left)/r,by=(top-mY(fix.lat))/r;
+      b.hidden=false;b.style.left=bx+'px';b.style.top=by+'px';
+      const ac=Math.max(8,2*fix.acc/Math.cos(fix.lat*Math.PI/180)/r);$('boat-acc').style.width=$('boat-acc').style.height=Math.min(ac,600)+'px';
+      $('boat-ico').innerHTML=(fix.spd>1&&fix.hdg!=null)
+        ?`<g transform="rotate(${fix.hdg} 15 15)"><path d="M15 2 L24 26 L15 21 L6 26 Z" fill="#e9b949" stroke="#0d2a33" stroke-width="2" stroke-linejoin="round"/></g>`
+        :`<circle cx="15" cy="15" r="7" fill="#e9b949" stroke="#0d2a33" stroke-width="2.5"/>`;
+      const inside=fix.lat>info.base[0]&&fix.lat<info.base[2]&&fix.lon>info.base[1]&&fix.lon<info.base[3];
+      msg(inside?'':'Você está fora da área da carta.');
+    }else b.hidden=true;
+    // escala
+    const mpp=r*Math.cos(Math.atan(Math.sinh(cy/RE)));   // metros reais por pixel
+    const opts=[50,100,200,500,1000,1852,3704,9260];let best=opts[0];
+    for(const o of opts)if(o/mpp<=110)best=o;
+    $('scale').innerHTML=(best>=1852?(best/1852)+' mn':best+' m')+`<i style="width:${(best/mpp).toFixed(0)}px"></i>`;
+    try{store.set('np-map',{cx,cy,z:zoom})}catch(e){}
+  }
+  const req=()=>{if(!raf)raf=requestAnimationFrame(draw)};
+  function clampZ(z){return Math.max(MINZ,Math.min(MAXZ,z))}
+  function zoomAt(nz,sx,sy){nz=clampZ(nz);const r=res(zoom),nr=res(nz);
+    const wx=cx+(sx-W/2)*r, wy=cy-(sy-H/2)*r;cx=wx-(sx-W/2)*nr;cy=wy+(sy-H/2)*nr;zoom=nz;req()}
+  function stopFollow(){if(follow){follow=false;$('m-gps').classList.remove('on')}}
+  // gestos
+  const pts=new Map();let last=null,lastTap=0,down=null;
+  el.addEventListener('pointerdown',e=>{el.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});last=null;down=pts.size===1?{x:e.clientX,y:e.clientY}:null});
+  el.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+    const rc=el.getBoundingClientRect(),P=[...pts.values()];
+    if(P.length===1){const p=P[0];if(last&&last.n===1){cx-=(p.x-last.x)*res(zoom);cy+=(p.y-last.y)*res(zoom);stopFollow();req()}last={n:1,x:p.x,y:p.y}}
+    else if(P.length>=2){const[a,b]=P;const d=Math.hypot(a.x-b.x,a.y-b.y),mx=(a.x+b.x)/2-rc.left,my=(a.y+b.y)/2-rc.top;
+      if(last&&last.n===2){cx-=(mx-last.mx)*res(zoom);cy+=(my-last.my)*res(zoom);zoomAt(zoom+Math.log2(d/last.d),mx,my)}
+      last={n:2,d,mx,my}}
+  });
+  const up=e=>{pts.delete(e.pointerId);last=null};
+  el.addEventListener('pointerup',e=>{const now=Date.now();
+    const tap=down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<8;
+    if(pts.size===1&&tap&&now-lastTap<300){const rc=el.getBoundingClientRect();zoomAt(zoom+1,e.clientX-rc.left,e.clientY-rc.top)}
+    if(tap)lastTap=now;up(e)});
+  el.addEventListener('pointercancel',up);
+  el.addEventListener('wheel',e=>{e.preventDefault();const rc=el.getBoundingClientRect();zoomAt(zoom-e.deltaY*0.0025,e.clientX-rc.left,e.clientY-rc.top)},{passive:false});
+  $('m-in').onclick=()=>zoomAt(Math.round(zoom)+1,W/2,H/2);
+  $('m-out').onclick=()=>zoomAt(Math.round(zoom)-1,W/2,H/2);
+  $('m-gps').onclick=()=>{follow=!follow;$('m-gps').classList.toggle('on',follow);
+    if(follow){if(fix){cx=mX(fix.lon);cy=mY(fix.lat);if(zoom<14)zoom=14;req()}else msg('Procurando sinal de GPS…')}};
+  window.addEventListener('resize',req);
+  // GPS próprio da carta
+  function onFix(p){const c=p.coords;const prev=fix;
+    let v=(c.speed!=null&&c.speed>=0)?c.speed*1.943844:null,h=(c.heading!=null&&!isNaN(c.heading))?c.heading:null;
+    if(prev&&(v==null||h==null)){const dt=(p.timestamp-prev.t)/3600000,d=hav(prev,{lat:c.latitude,lon:c.longitude});
+      if(dt>0&&d*1852>Math.max(4,c.accuracy*0.3)){if(v==null)v=d/dt;if(h==null)h=bearing(prev,{lat:c.latitude,lon:c.longitude})}}
+    fix={lat:c.latitude,lon:c.longitude,acc:c.accuracy,t:p.timestamp,spd:v==null?(prev?prev.spd:0):(prev&&prev.spd?prev.spd*0.5+v*0.5:v),hdg:h??(prev?prev.hdg:null)};
+    if(fix.spd<0.3)fix.spd=0;
+    $('h-spd').textContent=fmt(fix.spd)+' kn';$('h-hdg').textContent=fix.hdg!=null&&fix.spd>1?Math.round(fix.hdg)+'°':'—';
+    lastFix={lat:fix.lat,lon:fix.lon,t:Date.now()};store.set('np-lastfix',lastFix);
+    if(follow){cx=mX(fix.lon);cy=mY(fix.lat)}
+    if(!$('m-gps').dataset.done){$('m-gps').dataset.done=1;if(!sv){follow=true;$('m-gps').classList.add('on');cx=mX(fix.lon);cy=mY(fix.lat);zoom=Math.max(zoom,14)}}
+    req();
+  }
+  function startGPS(){if(watchId!=null||!('geolocation' in navigator))return;
+    watchId=navigator.geolocation.watchPosition(onFix,e=>{if(e.code===1)msg('Libere a localização para ver sua posição na carta.')},{enableHighAccuracy:true,maximumAge:2000,timeout:20000})}
+  function stopGPS(){if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=null}
+  function windNow(){const d=store.get('np-data',null);if(!d)return;const c=d.w[0],i=hourIndex(c),H=c.hourly;
+    $('h-wind').textContent=fmt(H.wind_speed_10m[i],0)+' '+dirTxt(H.wind_direction_10m[i])}
+  // Baixar para usar sem sinal
+  const CACHE='limar-cartas-v1';
+  async function checkSaved(){if(!('caches' in window)||!info)return;
+    try{const c=await caches.open(CACHE);const k=await c.keys();
+      if(k.length>=info.tiles.length){$('dl-msg').textContent='Carta salva neste celular. Funciona sem internet. A previsão é a da última vez que o app atualizou.';$('dl-btn').textContent='Atualizar carta e previsão';$('dl-btn').classList.add('ghost')}}catch(e){}}
+  $('dl-btn').onclick=async()=>{
+    if(!info){msg('Conecte à internet para baixar a carta.');return}
+    if(!('caches' in window)){$('dl-msg').textContent='Este navegador não permite salvar para usar sem sinal.';return}
+    const btn=$('dl-btn'),bar=$('dl-bar'),fill=bar.firstElementChild;btn.disabled=true;bar.hidden=false;
+    try{
+      if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+      await load(true);
+      const c=await caches.open(CACHE);const urls=info.tiles.map(t=>'cartas/'+t);let done=0,fail=0;
+      const queue=urls.slice();
+      async function worker(){while(queue.length){const u=queue.shift();
+        try{if(!(await c.match(u))){const r=await fetch(u);if(!r.ok)throw 0;await c.put(u,r)}}catch(e){fail++}
+        done++;fill.style.width=(done/urls.length*100)+'%';$('dl-msg').textContent='Baixando carta… '+Math.round(done/urls.length*100)+'%'}}
+      await Promise.all([worker(),worker(),worker(),worker(),worker(),worker()]);
+      await c.add('cartas/cartas.json').catch(()=>{});
+      $('dl-msg').textContent=fail?`Faltaram ${fail} partes da carta. Tente de novo com sinal melhor.`:'Pronto. Carta e previsão salvas neste celular. Funciona sem internet.';
+      if(!fail){btn.textContent='Atualizar carta e previsão';btn.classList.add('ghost')}
+    }catch(e){$('dl-msg').textContent='Não consegui baixar agora. Confira a internet e tente de novo.'}
+    btn.disabled=false;setTimeout(()=>bar.hidden=true,1500);
+  };
+  return {show(){windNow();startGPS();req()},hide(){stopGPS()},windNow};
+})();
+
 /* ---------- Abas ---------- */
 const tabs=[...document.querySelectorAll('.tab')];
-function show(v){tabs.forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='v-'+v);window.scrollTo(0,0);store.set('np-tab',v)}
+function show(v){tabs.forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));document.querySelectorAll('.view').forEach(s=>s.hidden=s.id!=='v-'+v);window.scrollTo(0,0);store.set('np-tab',v);
+  if(v==='carta')Carta.show();else Carta.hide()}
 tabs.forEach(t=>t.onclick=()=>show(t.dataset.v));
 show(store.get('np-tab','hoje')==='navegar'?'hoje':store.get('np-tab','hoje'));
 
