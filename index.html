@@ -687,7 +687,7 @@ document.addEventListener('visibilitychange',()=>{if(document.visibilityState===
 
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
 // quando sair versão nova do app, recarrega uma vez sozinho
-if('serviceWorker' in navigator){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()})}
+if('serviceWorker' in navigator&&navigator.serviceWorker.controller){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()})}
 </script>
 </body>
 </html>
