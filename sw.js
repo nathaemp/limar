@@ -1,5 +1,5 @@
 // Limar: guarda o app e a carta no celular para abrir sem sinal.
-const SHELL_CACHE = 'limar-v2';
+const SHELL_CACHE = 'limar-v3';
 const CARTA_CACHE = 'limar-cartas-v1';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'cartas/cartas.json'];
 
@@ -32,7 +32,7 @@ self.addEventListener('fetch', e => {
     }
     // App: tenta a internet (até 4 s); sem sinal, usa a cópia salva
     e.respondWith(
-      withTimeout(fetch(req), 4000).then(res => {
+      withTimeout(fetch(req, { cache: 'no-cache' }), 4000).then(res => {
         if (res.ok) { const copy = res.clone(); caches.open(SHELL_CACHE).then(c => c.put(req, copy)); }
         return res;
       }).catch(() => caches.match(req, { ignoreSearch: true }).then(r => r || caches.match('index.html')))
