@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Limar</title>
+<title>Limamar</title>
 <meta name="description" content="Condições de navegação na baía de Paraty para barqueiros e marinheiros.">
 <meta name="theme-color" content="#0f5a6b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Limar">
+<meta name="apple-mobile-web-app-title" content="Limamar">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
@@ -181,11 +181,11 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
   <header class="top">
     <div>
       <div class="eyebrow">Navegação em Paraty · <span id="hoje"></span></div>
-      <h1>Limar</h1>
+      <h1>Limamar</h1>
     </div>
     <div class="top-right">
       <span class="status" id="status">Carregando…</span>
-      <button type="button" class="ghost share" id="share-app" aria-label="Compartilhar o Limar">
+      <button type="button" class="ghost share" id="share-app" aria-label="Compartilhar o Limamar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
         Compartilhar
       </button>
@@ -549,7 +549,7 @@ function renderWeather(loc,i){
 /* Compartilhar o app */
 $('share-app').onclick=async()=>{
   const url=location.origin+location.pathname.replace(/index\.html$/,'');
-  const data={title:'Limar · Navegação em Paraty',text:'Vento, mar, maré, chuva e carta náutica da baía de Paraty no celular.',url};
+  const data={title:'Limamar · Navegação em Paraty',text:'Previsão do tempo, vento, mar, maré e carta náutica da baía de Paraty no celular.',url};
   try{
     if(navigator.share){await navigator.share(data);return}
   }catch(e){if(e&&e.name==='AbortError')return}

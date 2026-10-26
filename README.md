@@ -1,4 +1,4 @@
-# Limar · Navegação em Paraty
+# Limamar · Navegação em Paraty
 
 App para barqueiros e marinheiros da baía de Paraty: condições por ponto de passeio, vento hora a hora, maré, velocímetro pelo GPS e checklist de bordo.
 
