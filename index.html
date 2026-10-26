@@ -314,13 +314,6 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
   <section id="v-bordo" class="view" hidden>
     <div style="display:grid;gap:18px">
       <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px"><h2>Antes de sair</h2><span class="num legend" id="cnt">0/7</span></div>
-        <div class="progress"><i id="bar" style="width:0%"></i></div>
-        <div id="checks"></div>
-        <button class="ghost" id="chk-reset" type="button">Limpar para a próxima saída</button>
-      </div>
-
-      <div class="panel">
         <h2>Avisar a rota</h2>
         <div class="grid2">
           <label class="f">Barco<input type="text" id="f-barco" placeholder="Nome do barco"></label>
@@ -641,15 +634,6 @@ $('gps-stop').onclick=()=>{
 drawNav();
 
 /* ---------- Bordo ---------- */
-const ITEMS=['Coletes para todos a bordo','Extintor no lugar e na validade','Combustível conferido','Rádio VHF testado','Âncora e cabo','Lista de passageiros preenchida','Rota avisada para alguém em terra'];
-let done=store.get('np-chk',{});
-function renderChecks(){
-  $('checks').innerHTML=ITEMS.map((t,i)=>`<label class="check"><input type="checkbox" id="c${i}" ${done[i]?'checked':''}><span>${t}</span></label>`).join('');
-  const n=ITEMS.filter((_,i)=>done[i]).length;$('cnt').textContent=n+'/'+ITEMS.length;$('bar').style.width=(n/ITEMS.length*100)+'%';
-  ITEMS.forEach((_,i)=>$('c'+i).onchange=e=>{done[i]=e.target.checked;store.set('np-chk',done);renderChecks()});
-}
-$('chk-reset').onclick=()=>{done={};store.set('np-chk',done);renderChecks()};
-renderChecks();
 
 const FORM=['barco','pax','rota','volta'];
 const fv=store.get('np-form',{});FORM.forEach(k=>{if(fv[k])$('f-'+k).value=fv[k];$('f-'+k).oninput=()=>{fv[k]=$('f-'+k).value;store.set('np-form',fv);buildShare()}});
