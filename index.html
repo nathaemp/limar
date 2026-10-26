@@ -109,21 +109,38 @@ input[type=text],input[type=number],input[type=time],input[type=date]{font:inher
 .doc .when{font-size:.85rem;font-weight:700}
 .doc input{grid-column:1 / -1}
 
-/* Chuva hora a hora */
-.rain{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;margin-inline:-4px;padding:0 4px 4px}
-.rain-row{display:flex;gap:4px;min-width:max-content}
-.rc{width:34px;display:grid;grid-template-rows:auto 96px auto auto;gap:3px;text-align:center;font-size:.7rem;flex:none}
-.rc .p{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;color:var(--ink)}
-.rc .col{display:flex;align-items:flex-end;justify-content:center;background:var(--bay-soft);border-radius:6px;overflow:hidden}
-.rc .fill{width:100%;background:#7fb2c9;border-radius:6px 6px 0 0}
-.rc.mid .fill{background:var(--bay)}
-.rc.hi .fill{background:var(--warn)}
-.rc.storm .fill{background:var(--stop)}
-.rc .mm{color:var(--muted);font-family:var(--mono);font-size:.62rem;min-height:1em}
-.rc .h{color:var(--muted);font-weight:700}
-.rc.now .h{color:var(--bay)}
-.rc.day{width:auto;padding-inline:4px;display:flex;align-items:center;writing-mode:vertical-rl;transform:rotate(180deg);font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-right:1px dashed var(--line)}
-.rain-sum{font-size:.92rem;margin:0}
+/* Previsão do tempo */
+.wx-now{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px}
+.wx-now .ico{width:56px;height:56px}
+.wx-now .t{font-family:var(--display);font-size:2.6rem;font-weight:700;line-height:1}
+.wx-now .d{font-weight:700}
+.wx-now .s{font-size:.82rem;color:var(--muted)}
+.wx-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;margin-inline:-4px;padding:2px 4px 6px}
+.wx-row{display:flex;gap:6px;min-width:max-content}
+.wh{width:52px;flex:none;display:grid;justify-items:center;gap:3px;padding:8px 2px;border-radius:10px;background:var(--bay-soft);text-align:center}
+.wh.now{outline:2px solid var(--bay);outline-offset:-2px}
+.wh .h{font-size:.72rem;font-weight:700;color:var(--muted)}
+.wh.now .h{color:var(--bay)}
+.wh .ico{width:30px;height:30px}
+.wh .t{font-family:var(--mono);font-weight:500;font-size:.95rem}
+.wh .p{font-family:var(--mono);font-size:.68rem;color:var(--muted);min-height:1em}
+.wh .p.wet{color:var(--bay);font-weight:500}
+.wday{width:auto;flex:none;display:flex;align-items:center;writing-mode:vertical-rl;transform:rotate(180deg);font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding-inline:2px}
+.wdays{display:grid}
+.wd{display:grid;grid-template-columns:5.5em 32px 1fr auto;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.wd:first-child{border-top:0}
+.wd .n{font-weight:700}
+.wd .ico{width:28px;height:28px}
+.wd .c{font-size:.85rem;color:var(--muted);min-width:0}
+.wd .mm{font-family:var(--mono);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+.wd .mm small{color:var(--muted);font-size:.8em}
+.wx-sun{fill:#e9b949}
+.wx-moon{fill:#c9d6dc}
+.wx-cloud{fill:#b9c7cd}
+.wx-dark{fill:#7d8f97}
+.wx-drop{stroke:#3d8fc4;stroke-width:2.2;stroke-linecap:round;fill:none}
+.wx-bolt{fill:#e9b949;stroke:#8a5a00;stroke-width:.6}
+.wx-fog{stroke:#9aaab0;stroke-width:2.2;stroke-linecap:round}
 .top-right button.share{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:.8rem;line-height:1.1;border-width:1.5px;border-radius:999px;white-space:nowrap}
 .top-right button.share svg{width:15px;height:15px;flex:none}
 .top-right{display:grid;justify-items:end;gap:6px}
@@ -189,6 +206,16 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
         </div>
       </div>
 
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <h2>Previsão do tempo</h2><span class="legend">Paraty · hora a hora</span>
+        </div>
+        <div class="wx-now" id="wx-now"><span class="legend">Buscando previsão…</span></div>
+        <div class="wx-scroll" id="wx-hours" tabindex="0" aria-label="Previsão hora a hora, arraste para o lado"></div>
+        <span class="legend">Arraste para o lado para ver as próximas horas. Embaixo de cada hora, a chance de chuva.</span>
+        <div class="wdays" id="wx-days"></div>
+      </div>
+
       <div style="display:grid;gap:10px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
           <h2>Pontos de passeio</h2><span class="legend">pior momento nas próximas 6 h</span>
@@ -201,15 +228,6 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
           <h2>Vento no cais</h2><span class="legend">nós · a cada 2 h · número de cima é a rajada</span>
         </div>
         <div class="hours" id="hours"></div>
-      </div>
-
-      <div class="panel">
-        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
-          <h2>Chuva hora a hora</h2><span class="legend">chance de chuva · mm previstos</span>
-        </div>
-        <p class="rain-sum" id="rain-sum">Buscando previsão…</p>
-        <div class="rain" id="rain" tabindex="0" aria-label="Chance de chuva por hora, arraste para o lado"></div>
-        <span class="legend">Arraste para o lado para ver as próximas horas. Vermelho indica risco de trovoada.</span>
       </div>
 
       <div class="row"><button id="refresh" type="button">Atualizar previsão</button></div>
@@ -376,8 +394,9 @@ const join=(arr,k)=>arr.map(p=>p[k].toFixed(4)).join(',');
 function urlWeather(){
   const pts=[CAIS,...SPOTS];
   return 'https://api.open-meteo.com/v1/forecast?latitude='+join(pts,'lat')+'&longitude='+join(pts,'lon')+
-  '&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation_probability,precipitation,weather_code'+
-  '&wind_speed_unit=kn&timezone='+encodeURIComponent(TZ)+'&forecast_days=2';
+  '&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation_probability,precipitation,weather_code,temperature_2m,is_day'+
+  '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum'+
+  '&wind_speed_unit=kn&timezone='+encodeURIComponent(TZ)+'&forecast_days=4';
 }
 function urlMarine(pts){
   return 'https://marine-api.open-meteo.com/v1/marine?latitude='+join(pts,'lat')+'&longitude='+join(pts,'lon')+
@@ -387,7 +406,7 @@ const asArr=x=>Array.isArray(x)?x:[x];
 async function getJSON(u){const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 
 async function load(force){
-  const cached=store.get('np-data',null);
+  const cached=store.get('np-data2',null);
   if(cached&&!force&&Date.now()-cached.t<20*60*1000){render(cached,false);return}
   if(cached)render(cached,false);
   setStatus('Atualizando…','');
@@ -397,7 +416,7 @@ async function load(force){
     try{m=asArr(await getJSON(urlMarine([BAIA,...SPOTS])))}
     catch(e){m=asArr(await getJSON(urlMarine([BAIA])))}
     const data={t:Date.now(),w,m};
-    store.set('np-data',data);render(data,false);
+    store.set('np-data2',data);render(data,false);
   }catch(e){
     if(cached){render(cached,true)}
     else{setStatus('Sem conexão','err');$('vd-a').textContent='Sem previsão';$('vd-txt').textContent='Conecte à internet para baixar a previsão antes de sair. Depois ela fica salva no celular.'}
@@ -464,42 +483,74 @@ function render(d,offline){
     const cls=g>=RULE.gustStop?'max':g>=RULE.gustWarn?'hi':'';
     return `<div class="bar"><span class="num">${fmt(g,0)}</span><div class="col"><div class="fill ${cls}" style="height:${Math.max(4,v/top*100)}%"></div></div><span class="num">${fmt(v,0)}</span><span class="dir">${hhmm(H.time[k]).slice(0,2)}h</span></div>`}).join('');
 
-  renderRain(cais,i);
+  renderWeather(cais,i);
   renderTide(mBay);
   try{Carta.windNow()}catch(e){}
 }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 
-/* Chuva hora a hora: do momento atual até o fim de amanhã */
-function renderRain(loc,i){
-  const H=loc.hourly,T=H.time,P=H.precipitation_probability||[],MM=H.precipitation||[],WC=H.weather_code||[];
-  const end=Math.min(T.length,i+40);
-  let html='',prevDay=T[i].slice(0,10);
-  const today=prevDay;
+/* Previsão do tempo (códigos WMO) */
+function wxText(c){
+  if(c==null)return '—';
+  if(c===0)return 'Céu limpo';
+  if(c===1)return 'Poucas nuvens';
+  if(c===2)return 'Parcialmente nublado';
+  if(c===3)return 'Nublado';
+  if(c===45||c===48)return 'Neblina';
+  if(c>=51&&c<=57)return 'Garoa';
+  if(c===61||c===80)return 'Chuva fraca';
+  if(c===63||c===81)return 'Chuva';
+  if(c===65||c===82)return 'Chuva forte';
+  if(c===66||c===67)return 'Chuva';
+  if(c>=95)return 'Trovoada';
+  return 'Nublado';
+}
+function wxIcon(c,day=true){
+  const sun='<circle class="wx-sun" cx="16" cy="16" r="7"/><g class="wx-sun">'+[0,45,90,135,180,225,270,315].map(a=>`<rect x="15" y="2" width="2" height="5" rx="1" transform="rotate(${a} 16 16)"/>`).join('')+'</g>';
+  const moon='<path class="wx-moon" d="M21 6a10 10 0 1 0 6 15 8 8 0 0 1-6-15z"/>';
+  const smallSun='<g transform="translate(-4 -5) scale(.8)">'+sun+'</g>';
+  const smallMoon='<g transform="translate(-3 -4) scale(.8)">'+moon+'</g>';
+  const cloud=(cls='wx-cloud')=>`<path class="${cls}" d="M9 26h15a6 6 0 0 0 .6-12A8 8 0 0 0 9.3 16 5 5 0 0 0 9 26z"/>`;
+  const drops='<path class="wx-drop" d="M11 28l-1.5 3M16 28l-1.5 3M21 28l-1.5 3"/>';
+  const bolt='<path class="wx-bolt" d="M17 22l-4 6h3l-2 4 6-7h-3l2-3z"/>';
+  const fog='<path class="wx-fog" d="M6 20h20M8 24h16M10 28h12"/>';
+  let g;
+  if(c===0)g=day?sun:moon;
+  else if(c===1||c===2)g=(day?smallSun:smallMoon)+cloud();
+  else if(c===3)g=cloud();
+  else if(c===45||c===48)g=fog;
+  else if(c>=95)g=`<g transform="translate(0 -4)">${cloud('wx-dark')}</g>`+bolt;
+  else if((c>=51&&c<=67)||(c>=80&&c<=82))g=`<g transform="translate(0 -3)">${cloud(c===65||c===82?'wx-dark':'wx-cloud')}</g>`+drops;
+  else g=cloud();
+  return `<svg class="ico" viewBox="0 0 32 34" aria-hidden="true">${g}</svg>`;
+}
+function renderWeather(loc,i){
+  const H=loc.hourly,T=H.time,WC=H.weather_code||[],TMP=H.temperature_2m||[],P=H.precipitation_probability||[],DAY=H.is_day||[];
+  if(!TMP.length){$('wx-now').innerHTML='<span class="legend">Toque em Atualizar previsão para carregar a previsão do tempo.</span>';return}
+  const D=loc.daily||{};
+  // agora
+  const hiLo=D.time?`Máx ${fmt(D.temperature_2m_max[0],0)}° · Mín ${fmt(D.temperature_2m_min[0],0)}°`:'';
+  $('wx-now').innerHTML=`${wxIcon(WC[i],DAY[i]!==0)}<div style="min-width:0"><div class="d">${wxText(WC[i])}</div><div class="s">${hiLo}${P[i]!=null?' · chuva '+P[i]+'%':''}</div></div><div class="t">${fmt(TMP[i],0)}°</div>`;
+  // hora a hora: de agora até o fim de amanhã
+  const end=Math.min(T.length,i+42),today=T[i].slice(0,10);
   const fmtDay=d=>new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'numeric',timeZone:'UTC'}).format(new Date(d+'T12:00:00Z'));
+  let html='',prev=today;
   for(let k=i;k<end;k++){
-    const day=T[k].slice(0,10);
-    if(day!==prevDay){html+=`<div class="rc day" aria-hidden="true">${day===today?'Hoje':fmtDay(day)}</div>`;prevDay=day}
-    const p=P[k]??0,mm=MM[k],storm=(WC[k]||0)>=95;
-    const cls=storm?'storm':p>=70?'hi':p>=40?'mid':'';
-    const mmTxt=mm>=0.1?(mm<10?fmt(mm):fmt(mm,0)):'';
-    html+=`<div class="rc ${cls}${k===i?' now':''}" title="${hhmm(T[k])}: ${p}% de chance${mmTxt?', '+mmTxt+' mm':''}${storm?', trovoada':''}">
-      <span class="p">${p}%</span><div class="col"><div class="fill" style="height:${Math.max(3,p)}%"></div></div>
-      <span class="mm">${mmTxt}</span><span class="h">${k===i?'agora':hhmm(T[k]).slice(0,2)+'h'}</span></div>`;
+    const d=T[k].slice(0,10);
+    if(d!==prev){html+=`<div class="wday" aria-hidden="true">${fmtDay(d)}</div>`;prev=d}
+    const p=P[k]??0;
+    html+=`<div class="wh${k===i?' now':''}" title="${hhmm(T[k])}: ${wxText(WC[k])}, ${fmt(TMP[k],0)}°, chuva ${p}%">
+      <span class="h">${k===i?'Agora':hhmm(T[k]).slice(0,2)+'h'}</span>${wxIcon(WC[k],DAY[k]!==0)}
+      <span class="t">${fmt(TMP[k],0)}°</span><span class="p${p>=40?' wet':''}">${p>=10?p+'%':''}</span></div>`;
   }
-  $('rain').innerHTML=`<div class="rain-row">${html}</div>`;
-  // resumo das próximas 12 horas
-  let best=-1,bk=i,firstWet=-1,lastWet=-1,stormAt=-1;
-  for(let k=i;k<Math.min(T.length,i+12);k++){const p=P[k]??0;
-    if(p>best){best=p;bk=k}
-    if(p>=50){if(firstWet<0)firstWet=k;lastWet=k}
-    if((WC[k]||0)>=95&&stormAt<0)stormAt=k}
-  let sum;
-  if(best<20)sum='Tempo seco nas próximas 12 horas.';
-  else if(firstWet<0)sum=`Chance baixa de chuva nas próximas 12 horas (no máximo ${best}% às ${hhmm(T[bk]).slice(0,2)}h).`;
-  else sum=`Chuva mais provável entre ${hhmm(T[firstWet]).slice(0,2)}h e ${hhmm(T[lastWet]).slice(0,2)}h, com até ${best}% de chance.`;
-  if(stormAt>=0)sum+=` Risco de trovoada perto das ${hhmm(T[stormAt]).slice(0,2)}h.`;
-  $('rain-sum').textContent=sum;
+  $('wx-hours').innerHTML=`<div class="wx-row">${html}</div>`;
+  // próximos dias
+  if(D.time){
+    const names=['Hoje','Amanhã'];
+    $('wx-days').innerHTML=D.time.map((d,n)=>`<div class="wd"><span class="n">${names[n]??cap(fmtDay(d))}</span>${wxIcon(D.weather_code[n],true)}
+      <span class="c">${wxText(D.weather_code[n])}${D.precipitation_probability_max[n]!=null?' · chuva '+D.precipitation_probability_max[n]+'%':''}</span>
+      <span class="mm">${fmt(D.temperature_2m_max[n],0)}° <small>${fmt(D.temperature_2m_min[n],0)}°</small></span></div>`).join('');
+  }
 }
 
 /* Compartilhar o app */
@@ -750,7 +801,7 @@ const Carta=(()=>{
   function startGPS(){if(watchId!=null||!('geolocation' in navigator))return;
     watchId=navigator.geolocation.watchPosition(onFix,e=>{if(e.code===1)msg('Libere a localização para ver sua posição na carta.')},{enableHighAccuracy:true,maximumAge:2000,timeout:20000})}
   function stopGPS(){if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=null}
-  function windNow(){const d=store.get('np-data',null);if(!d)return;const c=d.w[0],i=hourIndex(c),H=c.hourly;
+  function windNow(){const d=store.get('np-data2',null);if(!d)return;const c=d.w[0],i=hourIndex(c),H=c.hourly;
     $('h-wind').textContent=fmt(H.wind_speed_10m[i],0)+' '+dirTxt(H.wind_direction_10m[i])}
   // Baixar para usar sem sinal
   const CACHE='limar-cartas-v1';
