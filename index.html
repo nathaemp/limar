@@ -109,6 +109,25 @@ input[type=text],input[type=number],input[type=time],input[type=date]{font:inher
 .doc .when{font-size:.85rem;font-weight:700}
 .doc input{grid-column:1 / -1}
 
+/* Chuva hora a hora */
+.rain{overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:thin;margin-inline:-4px;padding:0 4px 4px}
+.rain-row{display:flex;gap:4px;min-width:max-content}
+.rc{width:34px;display:grid;grid-template-rows:auto 96px auto auto;gap:3px;text-align:center;font-size:.7rem;flex:none}
+.rc .p{font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:500;color:var(--ink)}
+.rc .col{display:flex;align-items:flex-end;justify-content:center;background:var(--bay-soft);border-radius:6px;overflow:hidden}
+.rc .fill{width:100%;background:#7fb2c9;border-radius:6px 6px 0 0}
+.rc.mid .fill{background:var(--bay)}
+.rc.hi .fill{background:var(--warn)}
+.rc.storm .fill{background:var(--stop)}
+.rc .mm{color:var(--muted);font-family:var(--mono);font-size:.62rem;min-height:1em}
+.rc .h{color:var(--muted);font-weight:700}
+.rc.now .h{color:var(--bay)}
+.rc.day{width:auto;padding-inline:4px;display:flex;align-items:center;writing-mode:vertical-rl;transform:rotate(180deg);font-size:.66rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);border-right:1px dashed var(--line)}
+.rain-sum{font-size:.92rem;margin:0}
+.share{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;font-size:.8rem;border-radius:999px}
+.share svg{width:16px;height:16px}
+.top-right{display:grid;justify-items:end;gap:6px}
+
 /* Carta */
 .map{position:relative;height:calc(100dvh - 250px - env(safe-area-inset-bottom,0px) - env(safe-area-inset-top,0px));min-height:340px;border-radius:12px;overflow:hidden;background:#cfd8da;border:1px solid var(--line);touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
 .map .tiles{position:absolute;inset:0}
@@ -147,7 +166,13 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
       <div class="eyebrow">Navegação em Paraty · <span id="hoje"></span></div>
       <h1>Limar</h1>
     </div>
-    <span class="status" id="status">Carregando…</span>
+    <div class="top-right">
+      <span class="status" id="status">Carregando…</span>
+      <button type="button" class="ghost share" id="share-app" aria-label="Compartilhar o Limar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
+        Compartilhar
+      </button>
+    </div>
   </header>
 
   <!-- HOJE -->
@@ -176,6 +201,15 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
           <h2>Vento no cais</h2><span class="legend">nós · a cada 2 h · número de cima é a rajada</span>
         </div>
         <div class="hours" id="hours"></div>
+      </div>
+
+      <div class="panel">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
+          <h2>Chuva hora a hora</h2><span class="legend">chance de chuva · mm previstos</span>
+        </div>
+        <p class="rain-sum" id="rain-sum">Buscando previsão…</p>
+        <div class="rain" id="rain" tabindex="0" aria-label="Chance de chuva por hora, arraste para o lado"></div>
+        <span class="legend">Arraste para o lado para ver as próximas horas. Vermelho indica risco de trovoada.</span>
       </div>
 
       <div class="row"><button id="refresh" type="button">Atualizar previsão</button></div>
@@ -342,7 +376,7 @@ const join=(arr,k)=>arr.map(p=>p[k].toFixed(4)).join(',');
 function urlWeather(){
   const pts=[CAIS,...SPOTS];
   return 'https://api.open-meteo.com/v1/forecast?latitude='+join(pts,'lat')+'&longitude='+join(pts,'lon')+
-  '&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation_probability,weather_code'+
+  '&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation_probability,precipitation,weather_code'+
   '&wind_speed_unit=kn&timezone='+encodeURIComponent(TZ)+'&forecast_days=2';
 }
 function urlMarine(pts){
@@ -430,10 +464,55 @@ function render(d,offline){
     const cls=g>=RULE.gustStop?'max':g>=RULE.gustWarn?'hi':'';
     return `<div class="bar"><span class="num">${fmt(g,0)}</span><div class="col"><div class="fill ${cls}" style="height:${Math.max(4,v/top*100)}%"></div></div><span class="num">${fmt(v,0)}</span><span class="dir">${hhmm(H.time[k]).slice(0,2)}h</span></div>`}).join('');
 
+  renderRain(cais,i);
   renderTide(mBay);
   try{Carta.windNow()}catch(e){}
 }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+
+/* Chuva hora a hora: do momento atual até o fim de amanhã */
+function renderRain(loc,i){
+  const H=loc.hourly,T=H.time,P=H.precipitation_probability||[],MM=H.precipitation||[],WC=H.weather_code||[];
+  const end=Math.min(T.length,i+40);
+  let html='',prevDay=T[i].slice(0,10);
+  const today=prevDay;
+  const fmtDay=d=>new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'numeric',timeZone:'UTC'}).format(new Date(d+'T12:00:00Z'));
+  for(let k=i;k<end;k++){
+    const day=T[k].slice(0,10);
+    if(day!==prevDay){html+=`<div class="rc day" aria-hidden="true">${day===today?'Hoje':fmtDay(day)}</div>`;prevDay=day}
+    const p=P[k]??0,mm=MM[k],storm=(WC[k]||0)>=95;
+    const cls=storm?'storm':p>=70?'hi':p>=40?'mid':'';
+    const mmTxt=mm>=0.1?(mm<10?fmt(mm):fmt(mm,0)):'';
+    html+=`<div class="rc ${cls}${k===i?' now':''}" title="${hhmm(T[k])}: ${p}% de chance${mmTxt?', '+mmTxt+' mm':''}${storm?', trovoada':''}">
+      <span class="p">${p}%</span><div class="col"><div class="fill" style="height:${Math.max(3,p)}%"></div></div>
+      <span class="mm">${mmTxt}</span><span class="h">${k===i?'agora':hhmm(T[k]).slice(0,2)+'h'}</span></div>`;
+  }
+  $('rain').innerHTML=`<div class="rain-row">${html}</div>`;
+  // resumo das próximas 12 horas
+  let best=-1,bk=i,firstWet=-1,lastWet=-1,stormAt=-1;
+  for(let k=i;k<Math.min(T.length,i+12);k++){const p=P[k]??0;
+    if(p>best){best=p;bk=k}
+    if(p>=50){if(firstWet<0)firstWet=k;lastWet=k}
+    if((WC[k]||0)>=95&&stormAt<0)stormAt=k}
+  let sum;
+  if(best<20)sum='Tempo seco nas próximas 12 horas.';
+  else if(firstWet<0)sum=`Chance baixa de chuva nas próximas 12 horas (no máximo ${best}% às ${hhmm(T[bk]).slice(0,2)}h).`;
+  else sum=`Chuva mais provável entre ${hhmm(T[firstWet]).slice(0,2)}h e ${hhmm(T[lastWet]).slice(0,2)}h, com até ${best}% de chance.`;
+  if(stormAt>=0)sum+=` Risco de trovoada perto das ${hhmm(T[stormAt]).slice(0,2)}h.`;
+  $('rain-sum').textContent=sum;
+}
+
+/* Compartilhar o app */
+$('share-app').onclick=async()=>{
+  const url=location.origin+location.pathname.replace(/index\.html$/,'');
+  const data={title:'Limar · Navegação em Paraty',text:'Vento, mar, maré, chuva e carta náutica da baía de Paraty no celular.',url};
+  try{
+    if(navigator.share){await navigator.share(data);return}
+  }catch(e){if(e&&e.name==='AbortError')return}
+  try{await navigator.clipboard.writeText(url);flash('Link copiado. Cole no WhatsApp para enviar.')}
+  catch(e){window.open('https://wa.me/?text='+encodeURIComponent(data.text+' '+url),'_blank','noopener')}
+};
+function flash(t){const s=$('status');const old=s.textContent,oc=s.className;s.textContent=t;s.className='status';setTimeout(()=>{s.textContent=old;s.className=oc},2500)}
 
 function renderTide(loc){
   const T=loc.hourly.time, S=loc.hourly.sea_level_height_msl;
