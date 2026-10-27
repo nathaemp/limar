@@ -134,8 +134,26 @@ function painel(d){
       <div class="panel"><h2 style="font-size:1.15rem">Abas mais usadas</h2>${rank(d.top_abas,'Ainda sem dados.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
       <div class="panel"><h2 style="font-size:1.15rem">Ilhas e praias mais vistas</h2>${rank(d.top_lugares,'Ainda sem dados.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
     </div>
+    <div class="panel" id="ad-ntfy"><h2 style="font-size:1.3rem">Avisos no celular</h2><p class="empty">Carregando…</p></div>
     <p class="legend" style="margin:0">Atualizado ${quando(d.agora)}. Seus próprios cliques dentro da administração não entram na conta.</p>
   </div>`;
+  avisos();
+}
+
+/* ---------- avisos no celular (app ntfy) ---------- */
+let ntfyLido=false,ntfyCanal=null;
+async function avisos(){
+  const box=$('ad-ntfy');if(!box)return;
+  if(!ntfyLido){try{const {data,error}=await sb.rpc('admin_ntfy');if(error)throw error;ntfyCanal=data||null;ntfyLido=true}catch(e){box.innerHTML='<h2 style="font-size:1.3rem">Avisos no celular</h2><p class="empty">'+esc(erroTxt(e))+'</p>';return}}
+  box.innerHTML=`<h2 style="font-size:1.3rem">Avisos no celular</h2>
+    <p class="legend" style="margin:0">Chega na hora no iPhone, mesmo com o app fechado: cada <b>cadastro novo</b> e cada <b>e-mail confirmado</b>. Instale o app <b>ntfy</b>, toque em <b>+</b> e assine o canal abaixo (servidor ntfy.sh). Quem souber o nome do canal consegue ler os avisos, então não divulgue.</p>
+    <div class="inline"><label class="f">Canal<input type="text" id="nt-canal" value="${esc(ntfyCanal||'')}" maxlength="64" autocomplete="off" spellcheck="false"></label>
+      <button type="button" id="nt-salvar">${ntfyCanal?'Enviar teste':'Ligar'}</button></div>
+    <p class="legend" style="margin:0">${ntfyCanal?'Ligado no canal '+esc(ntfyCanal)+'.':'Desligado.'}${ntfyCanal?' <button type="button" class="linkbtn" id="nt-off">Desligar</button>':''}</p>`;
+  const inp=$('nt-canal');inp.oninput=()=>{inp.value=inp.value.replace(/[^A-Za-z0-9_-]/g,'');$('nt-salvar').textContent=inp.value===ntfyCanal?'Enviar teste':'Salvar e testar'};
+  $('nt-salvar').onclick=async()=>{const c=inp.value.trim();if(c.length<8)return msg('O nome do canal precisa de pelo menos 8 letras ou números.');
+    const {error}=await sb.rpc('admin_ntfy_salvar',{canal:c});if(error)return msg(erroTxt(error));ntfyCanal=c;msg('Aviso de teste enviado para o canal '+c+'.','ok');avisos()};
+  if($('nt-off'))$('nt-off').onclick=async()=>{const {error}=await sb.rpc('admin_ntfy_salvar',{canal:''});if(error)return msg(erroTxt(error));ntfyCanal=null;msg('Avisos desligados.','ok');avisos()};
 }
 
 /* ---------- usuários ---------- */
