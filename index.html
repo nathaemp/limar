@@ -673,6 +673,7 @@ renderZones();
 const arrow=deg=>`<svg class="ar" viewBox="0 0 16 16" aria-hidden="true"><g transform="rotate(${(deg??0)+180} 8 8)"><path d="M8 1.5 12.5 13 8 10.5 3.5 13Z" fill="currentColor"/></g></svg>`;
 function openPlace(id){
   const p=PLACES.find(x=>x.id===id);if(!p)return;
+  try{window.LM_TRACK&&LM_TRACK('lugar',p.n)}catch(e){}
   const z=p.z, r=zoneRes(z), n=ZONES.indexOf(z);
   const regName=z.reg==='norte'?'Norte':'Sul';
   let body='';

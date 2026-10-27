@@ -37,3 +37,5 @@ select.sel{font:inherit;font-size:1rem;color:var(--ink);background:var(--surface
 .conta .panel{gap:10px}
 [hidden]{display:none!important}
 .cf-turnstile:empty{min-height:0;display:none}
+.admin-pill{padding:6px 10px;font-size:.72rem;border-radius:999px;border-width:1.5px;background:var(--sand);border-color:var(--sand);color:#0d2a33;letter-spacing:.04em}
+.admin-go{background:var(--sand);border-color:var(--sand);color:#0d2a33}

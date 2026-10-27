@@ -1,7 +1,7 @@
 // Limamar: guarda o app e a carta no celular para abrir sem sinal.
-const SHELL_CACHE = 'limar-v8';
+const SHELL_CACHE = 'limar-v9';
 const CARTA_CACHE = 'limar-cartas-v1';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/maskable-512.png', 'icons/favicon-32.png', 'cartas/cartas.json', 'conta.js', 'conta.css'];
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/maskable-512.png', 'icons/favicon-32.png', 'cartas/cartas.json', 'conta.js', 'conta.css', 'admin.js'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SHELL_CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));

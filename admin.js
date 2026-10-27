@@ -1,0 +1,231 @@
+/* Limamar · administração
+   Só abre para administradores (o banco confere em cada função).
+   Painel com uso do app, quem está online, usuários e cortesias. */
+(()=>{
+"use strict";
+const sb=window.LM_SB;
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+const TZ='America/Sao_Paulo';
+const n0=v=>Number(v||0).toLocaleString('pt-BR');
+const quando=d=>{if(!d)return '—';const t=new Date(d),m=(Date.now()-t)/60000;
+  if(m<2)return 'agora';if(m<60)return 'há '+Math.round(m)+' min';if(m<1440)return 'há '+Math.round(m/60)+' h';
+  return new Intl.DateTimeFormat('pt-BR',{day:'numeric',month:'short',year:m>525600?'numeric':undefined,timeZone:TZ}).format(t)};
+const dataBR=d=>d?new Date(String(d).slice(0,10)+'T12:00:00').toLocaleDateString('pt-BR'):'';
+const erroTxt=e=>{const m=(e&&(e.message||e.details))||String(e);return /Acesso restrito/.test(m)?'Só administradores podem ver isto.':/Failed to fetch|NetworkError|Load failed/.test(m)?'Sem internet agora.':m};
+
+/* ---------- estilo ---------- */
+const css=document.createElement('style');css.textContent=`
+#admin{position:fixed;inset:0;z-index:45;background:var(--bg);overflow:auto;-webkit-overflow-scrolling:touch}
+#admin .box{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-left,0px)) calc(40px + env(safe-area-inset-bottom,0px));display:grid;gap:16px}
+#admin .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#admin .top h1{font-family:var(--display);font-size:2rem;margin:0;line-height:1}
+#admin .seg{grid-template-columns:repeat(3,1fr)}
+#admin .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+#admin .kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:2px}
+#admin .kpi b{font-family:var(--display);font-size:2rem;line-height:1}
+#admin .kpi span{font-size:.78rem;color:var(--muted)}
+#admin .kpi.live b{color:var(--go)}
+#admin .live-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--go);margin-right:6px;box-shadow:0 0 0 0 rgba(31,138,76,.6);animation:lmpulse 2s infinite}
+@keyframes lmpulse{70%{box-shadow:0 0 0 8px rgba(31,138,76,0)}100%{box-shadow:0 0 0 0 rgba(31,138,76,0)}}
+@media (prefers-reduced-motion:reduce){#admin .live-dot{animation:none}}
+#admin table{width:100%;border-collapse:collapse;font-size:.92rem}
+#admin th,#admin td{padding:9px 6px;border-top:1px solid var(--line);text-align:right;font-variant-numeric:tabular-nums}
+#admin th{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:0}
+#admin td:first-child,#admin th:first-child{text-align:left}
+#admin td small{display:block;color:var(--muted);font-size:.74rem}
+#admin .bars{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:end;height:110px}
+#admin .bars div{display:grid;grid-template-rows:1fr auto;gap:3px;height:100%;text-align:center;font-size:.62rem;color:var(--muted)}
+#admin .bars i{display:block;align-self:end;background:var(--bay);border-radius:3px 3px 0 0;min-height:2px}
+#admin .bars i.hoje{background:var(--sand)}
+#admin .rank{display:grid;gap:6px}
+#admin .rank div{display:grid;grid-template-columns:1fr auto;gap:8px;font-size:.9rem;position:relative;padding:5px 8px;border-radius:6px;overflow:hidden}
+#admin .rank div::before{content:"";position:absolute;inset:0 auto 0 0;width:var(--w);background:var(--bay-soft);z-index:0}
+#admin .rank div>*{position:relative}
+#admin .rank b{font-variant-numeric:tabular-nums}
+#admin .cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+#admin .user{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
+#admin .user .hd2{display:grid;grid-template-columns:44px 1fr;gap:10px;align-items:center}
+#admin .user .av{width:44px;height:44px;border-radius:50%;background:var(--bay-soft);color:var(--bay);display:grid;place-items:center;font-weight:700;overflow:hidden}
+#admin .user .av img{width:100%;height:100%;object-fit:cover}
+#admin .user .nm{font-weight:700;overflow-wrap:anywhere}
+#admin .user .em{font-size:.82rem;color:var(--muted);overflow-wrap:anywhere}
+#admin .tags{display:flex;flex-wrap:wrap;gap:6px}
+#admin .tag{font-size:.7rem;font-weight:700;padding:3px 8px;border-radius:999px;background:var(--bay-soft);color:var(--muted)}
+#admin .tag.ok{background:var(--go-bg);color:var(--go)} #admin .tag.warn{background:var(--warn-bg);color:var(--warn)} #admin .tag.bad{background:var(--stop-bg);color:var(--stop)} #admin .tag.gold{background:#f6e7bf;color:#7a5a00}
+#admin .acts{display:flex;flex-wrap:wrap;gap:8px}
+#admin .acts button{padding:8px 12px;font-size:.84rem;flex:0 1 auto}
+#admin .acts .danger{border-color:var(--stop);color:var(--stop);background:transparent}
+#admin .acts .danger.sure{background:var(--stop);color:#fff}
+#admin .filters{display:flex;flex-wrap:wrap;gap:6px}
+#admin .filters button{padding:6px 12px;font-size:.82rem;border-radius:999px;border-width:1px;background:transparent;color:var(--ink);border-color:var(--line)}
+#admin .filters button[aria-pressed="true"]{background:var(--bay);color:var(--on-bay);border-color:var(--bay)}
+#admin input[type=search],#admin input[type=email],#admin input[type=date],#admin input[type=text]{font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:11px;width:100%;min-width:0}
+#admin .inline{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end}
+#admin .msg{font-size:.9rem;border-radius:10px;padding:10px 12px;margin:0}
+#admin .msg.err{background:var(--stop-bg);color:var(--stop)} #admin .msg.ok{background:var(--go-bg);color:var(--go)}
+#admin .empty{color:var(--muted);font-size:.9rem;margin:0}
+`;document.head.appendChild(css);
+
+/* ---------- estrutura ---------- */
+const root=document.createElement('div');root.id='admin';root.hidden=true;root.setAttribute('role','dialog');root.setAttribute('aria-label','Administração do Limamar');
+root.innerHTML=`<div class="box">
+  <div class="top"><div><div class="eyebrow">Limamar</div><h1>Administração</h1></div>
+    <div style="display:flex;gap:8px"><button type="button" class="ghost" id="ad-ref" style="padding:8px 12px">Atualizar</button><button type="button" class="ghost x" id="ad-x" aria-label="Fechar" style="width:44px;height:44px;padding:0;border-radius:50%;font-size:1.4rem">×</button></div></div>
+  <div class="seg" role="group" aria-label="Seções">
+    <button type="button" data-s="painel" aria-pressed="true">Painel</button>
+    <button type="button" data-s="usuarios" aria-pressed="false">Usuários</button>
+    <button type="button" data-s="cortesias" aria-pressed="false">Cortesias</button>
+  </div>
+  <div id="ad-msg" aria-live="polite"></div>
+  <div id="ad-body"><p class="empty">Carregando…</p></div>
+</div>`;
+document.body.appendChild(root);
+let secao='painel',timer=null,USERS=[],filtro='todos',busca='';
+const msg=(t,c)=>{$('ad-msg').innerHTML=t?`<p class="msg ${c||'err'}">${esc(t)}</p>`:'';if(t&&c==='ok')setTimeout(()=>{if($('ad-msg'))$('ad-msg').innerHTML=''},3000)};
+root.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{secao=b.dataset.s;root.querySelectorAll('[data-s]').forEach(x=>x.setAttribute('aria-pressed',x===b));msg('');carrega()});
+$('ad-x').onclick=fechar;$('ad-ref').onclick=()=>carrega();
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!root.hidden)fechar()});
+
+function abrir(){root.hidden=false;document.documentElement.style.overflow='hidden';carrega();clearInterval(timer);timer=setInterval(()=>{if(secao==='painel'&&document.visibilityState==='visible')carrega(true)},30000)}
+function fechar(){root.hidden=true;document.documentElement.style.overflow='';clearInterval(timer)}
+
+async function carrega(silencioso){
+  if(!silencioso)$('ad-body').innerHTML='<p class="empty">Carregando…</p>';
+  try{
+    if(secao==='painel'){const {data,error}=await sb.rpc('admin_estatisticas');if(error)throw error;painel(data)}
+    else if(secao==='usuarios'){const {data,error}=await sb.rpc('admin_usuarios');if(error)throw error;USERS=data||[];usuarios()}
+    else{const {data,error}=await sb.rpc('admin_cortesias');if(error)throw error;cortesias(data||[])}
+  }catch(e){if(!silencioso)$('ad-body').innerHTML='';msg(erroTxt(e))}
+}
+
+/* ---------- painel ---------- */
+const LINHAS=[['visitantes','Visitantes','Aparelhos diferentes que abriram o app'],['aberturas','Aberturas do app','Quantas vezes o app foi aberto'],
+  ['usuarios_ativos','Usuários ativos','Contas que usaram o app'],['cadastros','Cadastros','Contas criadas'],['confirmados','E-mails confirmados','Contas que confirmaram o e-mail'],
+  ['cliques','Cliques em botões','Toques em botões do app'],['lugares','Ilhas e praias abertas','Fichas de lugares abertas'],
+  ['instalacoes','Instalações','Toques em Instalar e instalações concluídas'],['compartilhamentos','Compartilhamentos','Toques em Compartilhar o app']];
+function rank(lista,vazio){if(!lista||!lista.length)return `<p class="empty">${vazio}</p>`;const max=Math.max(...lista.map(x=>x.n));
+  return `<div class="rank">${lista.map(x=>`<div style="--w:${Math.max(4,x.n/max*100)}%"><span>${esc(x.item)}</span><b>${n0(x.n)}</b></div>`).join('')}</div>`}
+function painel(d){
+  const P=d.periodos||{},T=d.totais||{};
+  const serie=d.serie||[],mx=Math.max(1,...serie.map(s=>s.visitantes));
+  const diaCurto=s=>new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{day:'numeric'});
+  const on=d.online_lista||[];
+  $('ad-body').innerHTML=`<div style="display:grid;gap:16px">
+    <div class="kpis">
+      <div class="kpi live"><b>${n0(d.online)}</b><span><i class="live-dot"></i>Online agora</span></div>
+      <div class="kpi"><b>${n0(T.usuarios)}</b><span>Contas no total</span></div>
+      <div class="kpi"><b>${n0(T.cadastro_ok)}</b><span>Cadastros concluídos</span></div>
+      <div class="kpi"><b>${n0(T.cortesias)}</b><span>Cortesias ativas</span></div>
+      <div class="kpi"><b>${n0(T.bloqueados)}</b><span>Bloqueados</span></div>
+    </div>
+    <div class="panel"><h2 style="font-size:1.3rem">Quem está online</h2>
+      ${on.length?`<div class="rank">${on.map(u=>`<div style="--w:0%"><span><i class="live-dot"></i>${esc(u.nome)} <small style="color:var(--muted)">${esc(u.email)}</small></span><b>${quando(u.visto)}</b></div>`).join('')}</div>`:'<p class="empty">Nenhuma conta usando o app neste momento.</p>'}
+      ${d.online_anonimos?`<p class="legend" style="margin:0">+ ${n0(d.online_anonimos)} na tela de entrar (sem login).</p>`:''}
+      <p class="legend" style="margin:0">Conta como online quem usou o app nos últimos 2 minutos. Atualiza sozinho a cada 30 segundos.</p></div>
+    <div class="panel"><h2 style="font-size:1.3rem">Uso do app</h2>
+      <table><thead><tr><th></th><th>Hoje</th><th>7 dias</th><th>30 dias</th></tr></thead><tbody>
+      ${LINHAS.map(([k,l,h])=>`<tr title="${esc(h)}"><td>${l}<small>${h}</small></td><td>${n0(P.dia&&P.dia[k])}</td><td>${n0(P.semana&&P.semana[k])}</td><td>${n0(P.mes&&P.mes[k])}</td></tr>`).join('')}
+      </tbody></table></div>
+    <div class="panel"><h2 style="font-size:1.3rem">Visitantes por dia</h2>
+      <div class="bars" role="img" aria-label="Visitantes nos últimos 14 dias">${serie.map((s,i)=>`<div title="${dataBR(s.dia)}: ${s.visitantes} visitantes, ${s.aberturas} aberturas"><i class="${i===serie.length-1?'hoje':''}" style="height:${s.visitantes/mx*100}%"></i><span>${diaCurto(s.dia)}</span></div>`).join('')}</div>
+      <p class="legend" style="margin:0">Últimos 14 dias. A barra amarela é hoje.</p></div>
+    <div class="cols">
+      <div class="panel"><h2 style="font-size:1.15rem">Botões mais clicados</h2>${rank(d.top_cliques,'Ainda sem cliques.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
+      <div class="panel"><h2 style="font-size:1.15rem">Abas mais usadas</h2>${rank(d.top_abas,'Ainda sem dados.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
+      <div class="panel"><h2 style="font-size:1.15rem">Ilhas e praias mais vistas</h2>${rank(d.top_lugares,'Ainda sem dados.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
+    </div>
+    <p class="legend" style="margin:0">Atualizado ${quando(d.agora)}. Seus próprios cliques dentro da administração não entram na conta.</p>
+  </div>`;
+}
+
+/* ---------- usuários ---------- */
+const FILTROS=[['todos','Todos'],['online','Online'],['cortesia','Cortesia'],['bloqueado','Bloqueados'],['pendente','Sem confirmar']];
+function usuarios(){
+  const q=busca.toLowerCase();
+  const lista=USERS.filter(u=>(filtro==='todos'||(filtro==='online'&&u.online)||(filtro==='cortesia'&&u.cortesia)||(filtro==='bloqueado'&&u.bloqueado)||(filtro==='pendente'&&!u.confirmado))
+    &&(!q||[u.nome,u.email,u.barco,u.funcao].some(v=>v&&String(v).toLowerCase().includes(q))));
+  $('ad-body').innerHTML=`<div style="display:grid;gap:12px">
+    <input type="search" id="ad-q" placeholder="Buscar por nome, e-mail ou barco" value="${esc(busca)}" aria-label="Buscar usuário">
+    <div class="filters">${FILTROS.map(([k,l])=>`<button type="button" data-f="${k}" aria-pressed="${filtro===k}">${l} (${USERS.filter(u=>k==='todos'||(k==='online'&&u.online)||(k==='cortesia'&&u.cortesia)||(k==='bloqueado'&&u.bloqueado)||(k==='pendente'&&!u.confirmado)).length})</button>`).join('')}</div>
+    ${lista.length?lista.map(cartao).join(''):'<p class="empty">Nenhum usuário encontrado.</p>'}
+  </div>`;
+  const qi=$('ad-q');qi.oninput=()=>{busca=qi.value;const pos=qi.selectionStart;usuarios();const n=$('ad-q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}};
+  root.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{filtro=b.dataset.f;usuarios()});
+  root.querySelectorAll('[data-act]').forEach(b=>b.onclick=()=>acao(b));
+}
+function cartao(u){
+  const ini=esc(((u.nome||u.email||'?').trim()[0]||'?').toUpperCase());
+  const tags=[u.admin&&'<span class="tag gold">Administrador</span>',u.online&&'<span class="tag ok">Online</span>',
+    u.cortesia&&`<span class="tag gold">Cortesia${u.cortesia_ate?' até '+dataBR(u.cortesia_ate):''}</span>`,
+    u.bloqueado&&'<span class="tag bad">Bloqueado</span>',!u.confirmado&&'<span class="tag warn">E-mail não confirmado</span>',
+    u.confirmado&&!u.cadastro_ok&&'<span class="tag warn">Cadastro incompleto</span>'].filter(Boolean).join('');
+  const acts=u.admin?'':`
+    ${u.cortesia?`<button type="button" class="ghost" data-act="tirar-cortesia" data-email="${esc(u.email)}">Remover cortesia</button>`
+      :`<button type="button" class="ghost" data-act="dar-cortesia" data-email="${esc(u.email)}">Dar cortesia</button>`}
+    <button type="button" class="ghost" data-act="${u.bloqueado?'desbloquear':'bloquear'}" data-id="${u.id}">${u.bloqueado?'Desbloquear':'Bloquear'}</button>
+    <button type="button" class="danger" data-act="excluir" data-id="${u.id}">Excluir</button>`;
+  return `<div class="user" data-u="${u.id}">
+    <div class="hd2"><div class="av">${u.foto?`<img src="${esc(u.foto)}" alt="">`:ini}</div>
+      <div style="min-width:0"><div class="nm">${esc(u.nome||'(sem nome)')}</div><div class="em">${esc(u.email)}</div></div></div>
+    ${tags?`<div class="tags">${tags}</div>`:''}
+    <div class="legend">${[u.funcao,u.barco&&'Barco '+u.barco].filter(Boolean).map(esc).join(' · ')||'—'}</div>
+    <div class="legend">Conta criada ${quando(u.criado)} · último uso ${quando(u.visto||u.ultimo_login)} · ${n0(u.aberturas_30d)} aberturas em 30 dias</div>
+    ${acts?`<div class="acts">${acts}</div>`:''}
+    <div class="extra"></div>
+  </div>`;
+}
+async function acao(b){
+  const a=b.dataset.act,id=b.dataset.id,email=b.dataset.email;
+  try{
+    if(a==='dar-cortesia'){
+      const box=b.closest('.user').querySelector('.extra');
+      box.innerHTML=`<div class="inline"><label class="f">Cortesia até (deixe vazio para sem prazo)<input type="date" class="ct-ate"></label><button type="button" class="ct-ok">Dar</button></div>`;
+      box.querySelector('.ct-ok').onclick=async()=>{const ate=box.querySelector('.ct-ate').value||null;
+        const {error}=await sb.rpc('admin_cortesia_salvar',{e_mail:email,valida_ate:ate,observacao:'Dada pela lista de usuários'});if(error)return msg(erroTxt(error));
+        msg('Cortesia liberada para '+email+'.','ok');carrega(true)};return;
+    }
+    if(a==='tirar-cortesia'){const {error}=await sb.rpc('admin_cortesia_remover',{e_mail:email});if(error)throw error;msg('Cortesia removida.','ok');return carrega(true)}
+    if(a==='bloquear'||a==='desbloquear'){
+      if(a==='bloquear'&&!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Toque de novo para bloquear';setTimeout(()=>{b.classList.remove('sure');b.textContent='Bloquear'},4000);return}
+      const {error}=await sb.rpc('admin_bloquear',{usuario:id,bloquear:a==='bloquear'});if(error)throw error;
+      msg(a==='bloquear'?'Usuário bloqueado. Ele não consegue mais entrar.':'Usuário desbloqueado.','ok');return carrega(true)}
+    if(a==='excluir'){
+      if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Toque de novo para excluir para sempre';setTimeout(()=>{if(b.isConnected){b.classList.remove('sure');b.textContent='Excluir'}},5000);return}
+      b.disabled=true;b.textContent='Excluindo…';
+      try{const {data}=await sb.storage.from('avatars').list(id);if(data&&data.length)await sb.storage.from('avatars').remove(data.map(f=>id+'/'+f.name))}catch(e){}
+      const {error}=await sb.rpc('admin_excluir_usuario',{usuario:id});if(error)throw error;
+      msg('Usuário excluído.','ok');return carrega(true)}
+  }catch(e){msg(erroTxt(e))}
+}
+
+/* ---------- cortesias ---------- */
+function cortesias(lista){
+  $('ad-body').innerHTML=`<div style="display:grid;gap:14px">
+    <div class="panel"><h2 style="font-size:1.3rem">Dar cortesia</h2>
+      <p class="legend" style="margin:0">Vale para o e-mail mesmo que a pessoa ainda não tenha conta. Quando ela se cadastrar com esse e-mail, já entra com a cortesia.</p>
+      <form id="ct-form" style="display:grid;gap:10px" novalidate>
+        <label class="f">E-mail<input type="email" id="ct-email" required placeholder="nome@exemplo.com" inputmode="email"></label>
+        <label class="f">Válida até (vazio = sem prazo)<input type="date" id="ct-ate"></label>
+        <label class="f">Observação (opcional)<input type="text" id="ct-nota" maxlength="200" placeholder="Ex.: parceiro, barqueiro do cais"></label>
+        <button type="submit">Salvar cortesia</button>
+      </form></div>
+    <div class="panel"><h2 style="font-size:1.3rem">Cortesias (${lista.length})</h2>
+      ${lista.length?lista.map(c=>`<div class="user"><div style="display:grid;gap:4px">
+          <div class="nm">${esc(c.email)}</div>
+          <div class="tags"><span class="tag ${c.ativa?'ok':'bad'}">${c.ativa?'Ativa':'Vencida'}${c.ate?' · até '+dataBR(c.ate):' · sem prazo'}</span><span class="tag ${c.tem_conta?'':'warn'}">${c.tem_conta?'Já tem conta':'Ainda sem conta'}</span></div>
+          ${c.nota?`<div class="legend">${esc(c.nota)}</div>`:''}<div class="legend">Criada ${quando(c.criada)}</div></div>
+          <div class="acts"><button type="button" class="danger" data-rm="${esc(c.email)}">Remover cortesia</button></div></div>`).join('')
+        :'<p class="empty">Nenhuma cortesia ainda.</p>'}
+    </div></div>`;
+  $('ct-form').onsubmit=async e=>{e.preventDefault();const email=$('ct-email').value.trim();
+    if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return msg('Confira o e-mail.');
+    const {error}=await sb.rpc('admin_cortesia_salvar',{e_mail:email,valida_ate:$('ct-ate').value||null,observacao:$('ct-nota').value});
+    if(error)return msg(erroTxt(error));msg('Cortesia salva para '+email+'.','ok');carrega(true)};
+  root.querySelectorAll('[data-rm]').forEach(b=>b.onclick=async()=>{
+    if(!b.classList.contains('sure')){b.classList.add('sure');b.textContent='Toque de novo para remover';setTimeout(()=>{if(b.isConnected){b.classList.remove('sure');b.textContent='Remover cortesia'}},4000);return}
+    const {error}=await sb.rpc('admin_cortesia_remover',{e_mail:b.dataset.rm});if(error)return msg(erroTxt(error));msg('Cortesia removida.','ok');carrega(true)});
+}
+
+window.LM_ADMIN={abrir,fechar};
+})();

@@ -20,14 +20,15 @@ const FUNCOES=['Barqueiro','Marinheiro','Mestre / Arrais','Dono de embarcação'
 if(!window.LM_AUTH||!CFG.url||!CFG.key||!window.supabase){html.classList.remove('locked');return}
 
 const sb=window.supabase.createClient(CFG.url,CFG.key,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,flowType:'implicit',storageKey:'lm-auth'}});
-let user=null, perfil=ls.get('lm-perfil');
+let user=null, perfil=ls.get('lm-perfil'), PLANO=ls.get('lm-plano');
+window.LM_SB=sb;
 
 /* ---------- trava / destrava ---------- */
 const auth=$('auth');
-function unlock(){html.classList.remove('locked');auth.hidden=true;auth.innerHTML='';$('acct-btn').hidden=false;drawBtn()}
+function unlock(){html.classList.remove('locked');auth.hidden=true;auth.innerHTML='';$('acct-btn').hidden=false;drawBtn();drawAdminBtn()}
 function lock(view,msg){html.classList.add('locked');auth.hidden=false;$('acct-btn').hidden=true;go(view||'entrar',msg)}
 function setOK(u){ls.set('lm-ok',{id:u.id,email:u.email,t:Date.now()})}
-function clearLocal(){ls.del('lm-ok');ls.del('lm-perfil');perfil=null;user=null}
+function clearLocal(){ls.del('lm-ok');ls.del('lm-perfil');ls.del('lm-plano');perfil=null;user=null;PLANO=null;drawAdminBtn()}
 
 /* ---------- captcha (Cloudflare Turnstile) ---------- */
 let tsLoaded=null,tsWidget=null;
@@ -43,6 +44,7 @@ function captchaReset(){try{if(CFG.turnstile&&tsWidget!=null)window.turnstile.re
 function traduz(e){
   const m=(e&&(e.message||e.error_description||e))+'';
   if(/Invalid login credentials/i.test(m))return 'E-mail ou senha incorretos.';
+  if(/banned/i.test(m))return 'Esta conta está bloqueada. Fale com o Limamar pelo WhatsApp.';
   if(/Email not confirmed/i.test(m))return 'Você ainda não confirmou seu e-mail. Abra a mensagem que mandamos e toque no link.';
   if(/User already registered/i.test(m))return 'Esse e-mail já tem conta. Entre ou recupere a senha.';
   if(/Password should be at least|weak/i.test(m))return 'Senha fraca. Use pelo menos 8 caracteres, com letras e números.';
@@ -193,6 +195,8 @@ async function salvaPerfil(ch){
 async function entrou(u,aviso){
   user=u;setOK(u);
   try{await carregaPerfil()}catch(e){/* sem rede: segue com o que tem */}
+  try{const {data}=await sb.rpc('meu_plano');if(data){PLANO=data;ls.set('lm-plano',data)}}catch(e){}
+  drawAdminBtn();
   if(!perfil||!perfil.cadastro_ok){lock('concluir');return}
   unlock();if(aviso)flashMsg(aviso);
 }
@@ -223,7 +227,9 @@ async function trocaFoto(file){
 const dlg=$('conta');
 function abreConta(msg){
   const p=perfil||{};const online=navigator.onLine!==false;
-  const plano=p.plano&&p.plano!=='gratis'?`${esc(p.plano)}${p.plano_ate?' · até '+new Date(p.plano_ate).toLocaleDateString('pt-BR'):''}`:'Grátis';
+  const pl=PLANO||{plano:p.plano||'gratis',ate:p.plano_ate};
+  const nomePlano={gratis:'Grátis',cortesia:'Cortesia'}[pl.plano]||cap1(pl.plano);
+  const plano=esc(nomePlano)+(pl.ate&&pl.plano!=='gratis'?' · até '+new Date(String(pl.ate).slice(0,10)+'T12:00:00').toLocaleDateString('pt-BR'):pl.plano==='cortesia'?' · sem prazo':'');
   $('conta-in').innerHTML=`<div class="hd"><div><div class="eyebrow">Limamar</div><h2 id="ct-title">Minha conta</h2></div><button type="button" class="ghost x" id="ct-x" aria-label="Fechar">×</button></div>
     ${msg?msgBox(msg.t,msg.c):''}
     ${online?'':msgBox('Sem internet: dá para ver a conta, mas mudanças só com sinal.','info')}
@@ -238,7 +244,8 @@ function abreConta(msg){
         <label class="f">Embarcação<input type="text" id="ct-barco" maxlength="80" value="${esc(p.barco)}"></label>
         <button type="submit">Salvar dados</button>
       </form></div>
-    <div class="panel plan"><div><div class="eyebrow">Plano</div><b>${plano}</b></div><span class="legend">Planos pagos em breve.</span></div>
+    ${PLANO&&PLANO.admin?'<button type="button" id="ct-admin" class="admin-go">Abrir a administração</button>':''}
+    <div class="panel plan"><div><div class="eyebrow">Plano</div><b>${plano}</b></div><span class="legend">${pl.plano==='gratis'?'Planos pagos em breve.':'Acesso liberado.'}</span></div>
     <div class="panel"><h3 class="eyebrow" style="margin:0">Trocar senha</h3>
       <form id="ct-senha" novalidate>
         <label class="f">Nova senha<input type="password" id="ct-p1" autocomplete="new-password" minlength="8"></label>
@@ -256,6 +263,7 @@ function abreConta(msg){
     <span id="ct-msg" aria-live="polite"></span>`;
   const M=(t,c)=>{$('ct-msg').innerHTML=msgBox(t,c);$('ct-msg').scrollIntoView({block:'nearest'})};
   $('ct-x').onclick=()=>dlg.close();
+  if($('ct-admin'))$('ct-admin').onclick=()=>{dlg.close();abreAdmin()};
   $('ct-foto').onclick=()=>$('ct-file').click();
   $('ct-file').onchange=async e=>{const f=e.target.files[0];if(!f)return;$('ct-foto').disabled=true;$('ct-foto').textContent='Enviando…';
     try{await trocaFoto(f);abreConta({t:'Foto atualizada.',c:'ok'})}catch(err){M(traduz(err));$('ct-foto').disabled=false;$('ct-foto').textContent='Trocar foto'}};
@@ -278,6 +286,59 @@ function abreConta(msg){
   if(!dlg.open)dlg.showModal?dlg.showModal():dlg.setAttribute('open','');
 }
 $('acct-btn').onclick=()=>abreConta();
+const cap1=t=>String(t||'').charAt(0).toUpperCase()+String(t||'').slice(1);
+
+/* ---------- administração (só para administradores) ---------- */
+function drawAdminBtn(){
+  let b=$('admin-btn');
+  const on=!!(PLANO&&PLANO.admin)&&!html.classList.contains('locked');
+  if(!b&&on){b=document.createElement('button');b.type='button';b.id='admin-btn';b.className='admin-pill';b.textContent='Admin';b.setAttribute('aria-label','Abrir a administração');
+    $('acct-btn').before(b);b.onclick=()=>abreAdmin()}
+  if(b)b.hidden=!on;
+}
+let adminLoad=null;
+function abreAdmin(){
+  adminLoad=adminLoad||new Promise((ok,no)=>{const s=document.createElement('script');s.src='admin.js?v=2';s.onload=ok;s.onerror=()=>{adminLoad=null;no()};document.head.appendChild(s)});
+  adminLoad.then(()=>window.LM_ADMIN&&window.LM_ADMIN.abrir()).catch(()=>flashMsg('Sem internet para abrir a administração.'));
+}
+
+/* ---------- uso do app: aberturas, abas, cliques e quem está online ---------- */
+const Uso=(()=>{
+  let vid=ls.get('lm-vid');if(!vid){vid=(crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2));ls.set('lm-vid',vid)}
+  let fila=ls.get('lm-evq')||[],enviando=false,ultimo=0;
+  const guarda=()=>ls.set('lm-evq',fila.slice(-200));
+  function add(tipo,detalhe){if(document.getElementById('admin')&&!document.getElementById('admin').hidden&&tipo!=='abrir')return;
+    fila.push({tipo,detalhe:detalhe?String(detalhe).slice(0,80):null,at:new Date().toISOString()});guarda();if(fila.length>=20)envia()}
+  async function envia(){
+    if(enviando||navigator.onLine===false)return;enviando=true;
+    const lote=fila.slice(0,50);
+    try{const {error}=await sb.rpc('registrar_eventos',{visitante:vid,eventos:lote});
+      if(!error){fila=fila.slice(lote.length);guarda();ultimo=Date.now()}}catch(e){}
+    enviando=false;
+  }
+  add('abrir',navigator.standalone||matchMedia('(display-mode: standalone)').matches?'app instalado':'navegador');
+  setTimeout(envia,2500);
+  setInterval(()=>{if(document.visibilityState==='visible')envia()},60000);   // a cada minuto: avisa que está online
+  let escondido=0;
+  document.addEventListener('visibilitychange',()=>{
+    if(document.visibilityState==='hidden'){escondido=Date.now();envia()}
+    else{if(escondido&&Date.now()-escondido>30*60000)add('abrir','voltou ao app');envia()}});
+  window.addEventListener('online',envia);
+  window.addEventListener('appinstalled',()=>add('instalar','instalou'));
+  // cliques: abas, lugares e botões
+  document.addEventListener('click',e=>{
+    const t=e.target.closest&&e.target.closest('button,a.btn,[role=tab]');if(!t)return;
+    if(t.closest('#admin'))return;
+    if(t.classList.contains('tab')){add('aba',t.textContent.trim());return}
+    if(t.classList.contains('place'))return;   // vira evento "lugar" na ficha
+    if(t.id==='share-app'){add('compartilhar','botão do topo')}
+    if(t.id==='inst-go'||t.id==='inst-btn'){add('instalar','botão instalar')}
+    const nome=(t.dataset.ev||t.getAttribute('aria-label')||t.textContent||'').replace(/\s+/g,' ').trim().slice(0,40);
+    if(nome)add('clique',nome);
+  },true);
+  return {add,envia};
+})();
+window.LM_TRACK=(t,d)=>Uso.add(t,d);
 dlg.addEventListener('click',e=>{if(e.target===dlg)dlg.close()});
 
 /* ---------- início ---------- */
