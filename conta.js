@@ -5,8 +5,8 @@
 (()=>{
 "use strict";
 const CFG={
-  url:'',          // https://xxxx.supabase.co
-  key:'',          // chave pública (anon / publishable): pode ficar no app
+  url:'https://gmqkbxxwutgntrnrqwjm.supabase.co',
+  key:'sb_publishable_Tf3vFF5ygNld9fWY8dP2rQ_dYnb7iV5',   // chave pública: pode ficar no app
   turnstile:''     // site key do Cloudflare Turnstile (captcha), quando ativado
 };
 const $=id=>document.getElementById(id);
