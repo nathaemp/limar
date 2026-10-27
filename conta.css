@@ -36,3 +36,4 @@ html.locked body{overflow:hidden}
 select.sel{font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;width:100%}
 .conta .panel{gap:10px}
 [hidden]{display:none!important}
+.cf-turnstile:empty{min-height:0;display:none}
