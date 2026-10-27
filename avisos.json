@@ -1,7 +1,7 @@
 {
  "fonte": "Marinha do Brasil · CHM · Serviço Meteorológico Marinho",
  "url": "https://www.marinha.mil.br/chm/dados-do-smm-avisos-de-mau-tempo/avisos-de-mau-tempo",
- "baixado": "2026-10-27T14:17:47Z",
+ "baixado": "2026-10-27T14:22:30Z",
  "avisos": [
   {
    "area": "ÁREA ECHO",
@@ -26,30 +26,6 @@
    "fim": "2026-10-28T00:00:00Z",
    "tipo": "AVISO DE MAR MUITO GROSSO",
    "texto": "AVISO NR 786/2026\nAVISO DE MAR MUITO GROSSO\nEMITIDO ÀS 1300Z - SÁB - 24/OUT/2026\nÁREA OCEÂNICA ENTRE 26.4S030.3W, 35.9S020W E 26.4S020W A PARTIR DE 261800Z. ONDAS DE N/NW 4.0/5.5 METROS.\nVÁLIDO ATÉ 280000Z."
-  },
-  {
-   "area": "",
-   "numero": "788/2026",
-   "inicio": "",
-   "fim": "",
-   "tipo": "",
-   "texto": "WARNING NR 788/2026\nNEAR GALE WARNING\nISSUED AT 261400 UTC OCT 2026\nOCEANIC AREA BETWEEN 17.8S039.1W, 14.1S038.4W, 19.3S033W AND 21S033.1W STARTING AT 270600Z. WIND S/SE FORCE 7 WITH GUSTS.\nVALID UNTIL 280600Z."
-  },
-  {
-   "area": "",
-   "numero": "784/2026",
-   "inicio": "",
-   "fim": "",
-   "tipo": "",
-   "texto": "WARNING NR 784/2026\nGALE WARNING\nISSUED AT 241300 UTC OCT 2026\nOCEANIC AREA BETWEEN 25.1S028.7W, 25S020W AND 34.1S020W STARTING AT 262100Z. WIND N/NW FORCE 8 WITH GUSTS FORCE 9.\nVALID UNTIL 272100Z."
-  },
-  {
-   "area": "",
-   "numero": "786/2026",
-   "inicio": "",
-   "fim": "",
-   "tipo": "",
-   "texto": "WARNING NR 786/2026\nVERY ROUGH SEA WARNING\nISSUED AT 241300 UTC OCT 2026\nOCEANIC AREA BETWEEN 26.4S030.3W, 35.9S020W AND 26.4S020W STARTING AT 261800Z. WAVES FM N/NW 4.0/5.5 METERS.\nVALID UNTIL 280000Z."
   }
  ]
 }
