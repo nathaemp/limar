@@ -134,11 +134,97 @@ function painel(d){
       <div class="panel"><h2 style="font-size:1.15rem">Abas mais usadas</h2>${rank(d.top_abas,'Ainda sem dados.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
       <div class="panel"><h2 style="font-size:1.15rem">Ilhas e praias mais vistas</h2>${rank(d.top_lugares,'Ainda sem dados.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
     </div>
+    <div class="panel" id="ad-wg"><h2 style="font-size:1.3rem">Widget no iPhone</h2>
+      <p class="legend" style="margin:0">Mostra na tela inicial e na tela bloqueada quantas pessoas estão online, visitantes, cadastros e cliques de hoje. O iPhone atualiza sozinho mais ou menos a cada 5 a 15 minutos.</p>
+      <ol style="margin:0;padding-left:20px;display:grid;gap:6px;font-size:.92rem">
+        <li>Instale o app grátis <b>Scriptable</b> na App Store.</li>
+        <li>Neste iPhone, toque em <button type="button" class="linkbtn" id="wg-copiar">copiar script</button>.</li>
+        <li>No Scriptable, toque em <b>+</b>, cole o script e salve com o nome <b>Limamar</b>.</li>
+        <li>Tela inicial: segure o dedo, toque em <b>+</b> (ou Editar › Adicionar widget), escolha <b>Scriptable</b>, tamanho médio, depois toque no widget e escolha o script Limamar.</li>
+        <li>Tela bloqueada: segure o dedo, <b>Personalizar</b> › Tela Bloqueada, adicione o widget Scriptable e escolha o script Limamar.</li>
+      </ol>
+      <p class="legend" style="margin:0">Não compartilhe o script: ele leva a chave secreta dos números. Se ele vazar, toque em <button type="button" class="linkbtn" id="wg-nova">trocar a chave</button> (o widget antigo para de funcionar e você copia o script de novo).</p>
+    </div>
     <div class="panel" id="ad-po"><h2 style="font-size:1.3rem">Avisos com som (Pushover)</h2><p class="empty">Carregando…</p></div>
     <div class="panel" id="ad-ntfy"><h2 style="font-size:1.3rem">Avisos no celular</h2><p class="empty">Carregando…</p></div>
     <p class="legend" style="margin:0">Atualizado ${quando(d.agora)}. Seus próprios cliques dentro da administração não entram na conta.</p>
   </div>`;
-  avisos();pushover();
+  avisos();pushover();widget();
+}
+
+/* ---------- widget do iPhone (Scriptable) ---------- */
+function scriptWidget(chave){
+  const url='https://gmqkbxxwutgntrnrqwjm.supabase.co/rest/v1/rpc/widget_estatisticas';
+  const apikey='sb_publishable_Tf3vFF5ygNld9fWY8dP2rQ_dYnb7iV5';
+  return `// Limamar — números ao vivo (widget)
+// Cole no app Scriptable. Não compartilhe: a chave abaixo é secreta.
+const CHAVE = ${JSON.stringify(chave)};
+const URL_NUMEROS = ${JSON.stringify(url)};
+const APIKEY = ${JSON.stringify(apikey)};
+const AREIA = new Color("#e9b949"), MAR = new Color("#0f5a6b"), VERDE = new Color("#4cc37e");
+
+async function carrega() {
+  try {
+    const r = new Request(URL_NUMEROS);
+    r.method = "POST";
+    r.headers = { "apikey": APIKEY, "Content-Type": "application/json" };
+    r.body = JSON.stringify({ chave: CHAVE });
+    r.timeoutInterval = 15;
+    const d = await r.loadJSON();
+    if (d && d.ready) { Keychain.set("limamar-numeros", JSON.stringify(d)); return d; }
+  } catch (e) {}
+  return Keychain.contains("limamar-numeros") ? JSON.parse(Keychain.get("limamar-numeros")) : null;
+}
+
+const n = (v) => new Intl.NumberFormat("pt-BR").format(v || 0);
+const d = await carrega();
+const fam = config.widgetFamily || "medium";
+const w = new ListWidget();
+w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000);
+w.url = "https://nathaemp.github.io/limar/";
+
+if (!d) {
+  w.addText("Limamar: sem dados");
+} else if (fam === "accessoryInline") {
+  w.addText(\`⚓ \${n(d.online)} online · \${n(d.cadastros.day)} cadastros hoje\`);
+} else if (fam === "accessoryCircular") {
+  const t = w.addText(n(d.online)); t.font = Font.boldSystemFont(22); t.centerAlignText();
+  const s = w.addText("online"); s.font = Font.systemFont(9); s.centerAlignText();
+} else if (fam === "accessoryRectangular") {
+  const a = w.addText(\`⚓ \${n(d.online)} online agora\`); a.font = Font.boldSystemFont(14);
+  const b = w.addText(\`Hoje: \${n(d.visitantes.day)} visitantes · \${n(d.cadastros.day)} cadastros\`); b.font = Font.systemFont(11);
+  const c = w.addText(\`\${n(d.cliques.day)} cliques · \${n(d.usuarios)} contas\`); c.font = Font.systemFont(11);
+} else {
+  w.backgroundColor = MAR;
+  const h = w.addText("LIMAMAR · HOJE"); h.font = Font.semiboldSystemFont(10); h.textColor = AREIA;
+  w.addSpacer(4);
+  const o = w.addText(\`● \${n(d.online)} online agora\`); o.font = Font.boldSystemFont(fam === "small" ? 16 : 20); o.textColor = VERDE;
+  w.addSpacer(6);
+  const linhas = [["Visitantes", d.visitantes], ["Usuários ativos", d.ativos], ["Cadastros", d.cadastros], ["E-mails confirmados", d.confirmados], ["Cliques", d.cliques]];
+  for (const [rotulo, p] of (fam === "small" ? linhas.slice(0, 3) : linhas)) {
+    const s = w.addStack();
+    const l = s.addText(rotulo); l.font = Font.systemFont(11); l.textColor = Color.white();
+    s.addSpacer();
+    const v = s.addText(fam === "small" ? n(p.day) : \`\${n(p.day)}  ·  7d \${n(p.week)}\`); v.font = Font.boldMonospacedSystemFont(11); v.textColor = Color.white();
+  }
+  w.addSpacer();
+  const u = w.addText(\`\${n(d.usuarios)} contas · atualizado \${new Date(d.updatedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}\`);
+  u.font = Font.systemFont(8); u.textColor = new Color("#d6e8ea");
+}
+
+if (config.runsInWidget) Script.setWidget(w);
+else await w.presentMedium();
+Script.complete();
+`;
+}
+async function copiaTexto(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
+function widget(){
+  const c=$('wg-copiar'),nv=$('wg-nova');if(!c)return;
+  c.onclick=async()=>{const {data,error}=await sb.rpc('admin_widget_chave',{nova:false});if(error)return msg(erroTxt(error));
+    const ok=await copiaTexto(scriptWidget(data));msg(ok?'Script copiado. Agora cole no Scriptable.':'Não consegui copiar sozinho. Tente de novo pelo iPhone.',ok?'ok':'err')};
+  nv.onclick=async()=>{if(!nv.classList.contains('sure')){nv.classList.add('sure');nv.textContent='toque de novo para trocar';setTimeout(()=>{if(nv.isConnected){nv.classList.remove('sure');nv.textContent='trocar a chave'}},4000);return}
+    const {data,error}=await sb.rpc('admin_widget_chave',{nova:true});if(error)return msg(erroTxt(error));
+    const ok=await copiaTexto(scriptWidget(data));msg('Chave trocada. '+(ok?'O script novo já foi copiado: cole no Scriptable no lugar do antigo.':'Toque em copiar script e cole no Scriptable.'),'ok')};
 }
 
 /* ---------- avisos com som (Pushover) ---------- */
