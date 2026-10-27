@@ -87,7 +87,7 @@ root.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{secao=b.dataset.s;ro
 $('ad-x').onclick=fechar;$('ad-ref').onclick=()=>carrega();
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!root.hidden)fechar()});
 
-function abrir(){root.hidden=false;document.documentElement.style.overflow='hidden';carrega();clearInterval(timer);timer=setInterval(()=>{if(secao==='painel'&&document.visibilityState==='visible')carrega(true)},30000)}
+function abrir(){root.hidden=false;document.documentElement.style.overflow='hidden';carrega();clearInterval(timer);timer=setInterval(()=>{const ed=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#ad-po,#ad-ntfy');const digitado=['po-u','po-t'].some(i=>$(i)&&$(i).value);if(secao==='painel'&&document.visibilityState==='visible'&&!ed&&!digitado)carrega(true)},30000)}
 function fechar(){root.hidden=true;document.documentElement.style.overflow='';clearInterval(timer)}
 
 async function carrega(silencioso){
