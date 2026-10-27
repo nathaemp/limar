@@ -11,7 +11,9 @@
 <meta name="apple-mobile-web-app-title" content="Limamar">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="icons/favicon-48.png" sizes="48x48" type="image/png">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <script>var LM_AUTH=false;/* liga quando o servidor de contas estiver pronto */if(LM_AUTH){try{if(!localStorage.getItem('lm-ok'))document.documentElement.classList.add('locked')}catch(e){document.documentElement.classList.add('locked')}}</script>
@@ -97,8 +99,8 @@ header.top h1{font-size:2rem;line-height:1;font-weight:700}
 .aviso.stop .w{color:var(--stop)}
 .aviso details{font-size:.82rem}
 .aviso pre{white-space:pre-wrap;font-family:var(--mono);font-size:.76rem;margin:6px 0 0}
-.mar-ok{font-size:.82rem;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.mar-ok::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--go);flex:none}
+.mar-ok{font-size:.82rem;color:var(--muted);display:block;padding-left:17px;position:relative}
+.mar-ok::before{content:"";position:absolute;left:0;top:.42em;width:9px;height:9px;border-radius:50%;background:var(--go)}
 .mar-ok.unk::before{background:var(--line)}
 
 /* Ficha do lugar */
@@ -206,6 +208,20 @@ input[type=text],input[type=number],input[type=time],input[type=date]{font:inher
 .top-right button.share{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:.8rem;line-height:1.1;border-width:1.5px;border-radius:999px;white-space:nowrap}
 .top-right button.share svg{width:15px;height:15px;flex:none}
 .top-right{display:grid;justify-items:end;gap:6px}
+
+/* Instalar o app */
+.inst{position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top,0px));z-index:40;max-width:536px;margin:0 auto;display:flex;align-items:center;gap:12px;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:10px 12px;box-shadow:0 8px 28px rgba(4,22,27,.28)}
+.inst img{width:44px;height:44px;border-radius:11px;flex:none}
+.inst .tx{flex:1;min-width:0}
+.inst .tx b{display:block;font-size:.92rem;line-height:1.2}
+.inst .tx span{font-size:.76rem;color:var(--muted)}
+.inst .bt{display:grid;gap:2px;justify-items:end;flex:none}
+.inst .bt button:first-child{padding:8px 14px;font-size:.88rem}
+.inst .no{background:none;border:0;padding:2px 4px;font-size:.72rem;font-weight:400;color:var(--muted)}
+.steps{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.steps li{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:center}
+.steps li>b{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--bay);color:var(--on-bay);font-size:.8rem}
+.steps svg{width:20px;height:20px;vertical-align:-4px;margin:0 2px}
 
 /* Carta */
 .map{position:relative;height:calc(100dvh - 250px - env(safe-area-inset-bottom,0px) - env(safe-area-inset-top,0px));min-height:340px;border-radius:12px;overflow:hidden;background:#cfd8da;border:1px solid var(--line);touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
@@ -401,6 +417,12 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
         <span class="legend" id="share-msg" aria-live="polite"></span>
       </div>
 
+      <div class="panel" id="inst-panel">
+        <h2>Instalar no celular</h2>
+        <p class="legend" style="margin:0" id="inst-txt">Coloque o Limamar na tela inicial: abre como aplicativo, em tela cheia, e funciona sem sinal no mar.</p>
+        <button type="button" id="inst-btn">Instalar o Limamar</button>
+      </div>
+
       <div class="panel">
         <h2>Vencimentos</h2>
         <div id="docs"></div>
@@ -412,6 +434,21 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
 
 <dialog class="sheet" id="sheet" aria-labelledby="pl-name"><div class="in" id="sheet-in"></div></dialog>
 <div id="auth" class="auth" hidden></div>
+<div class="inst" id="inst" role="dialog" aria-label="Instalar o app Limamar" hidden>
+  <img src="icons/icon-192.png" alt="">
+  <div class="tx"><b>Instale o Limamar</b><span>Abre direto da tela inicial e funciona sem sinal.</span></div>
+  <div class="bt"><button type="button" id="inst-go">Instalar</button><button type="button" class="no" id="inst-no">Agora não</button></div>
+</div>
+<dialog class="sheet" id="inst-ios" aria-labelledby="ios-t"><div class="in">
+  <div class="hd"><div style="display:flex;gap:12px;align-items:center"><img src="icons/icon-192.png" alt="" style="width:48px;height:48px;border-radius:12px"><h2 id="ios-t" style="font-size:1.4rem">Instalar no iPhone</h2></div><button type="button" class="ghost x" id="ios-x" aria-label="Fechar">×</button></div>
+  <ol class="steps">
+    <li><b>1</b><span>Toque em <strong>Compartilhar</strong><svg viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>na barra do Safari (embaixo ou em cima da tela).</span></li>
+    <li><b>2</b><span>Role a lista e escolha <strong>Adicionar à Tela de Início</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>.</span></li>
+    <li><b>3</b><span>Toque em <strong>Adicionar</strong>. O ícone do Limamar aparece na tela inicial.</span></li>
+  </ol>
+  <p class="legend" style="margin:0" id="ios-extra"></p>
+  <button type="button" id="ios-ok">Entendi</button>
+</div></dialog>
 <dialog id="conta" class="sheet conta" aria-labelledby="ct-title"><div class="in" id="conta-in"></div></dialog>
 
 <nav class="tabs" role="tablist" aria-label="Seções">
@@ -786,6 +823,35 @@ $('share-app').onclick=async()=>{
   try{await navigator.clipboard.writeText(url);flash('Link copiado. Cole no WhatsApp para enviar.')}
   catch(e){window.open('https://wa.me/?text='+encodeURIComponent(data.text+' '+url),'_blank','noopener')}
 };
+/* Instalar na tela inicial */
+const Inst=(()=>{
+  const KEY='np-inst-no',DAYS=14;
+  const standalone=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone===true;
+  const ios=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(/Macintosh/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+  const iosOther=ios&&/CriOS|FxiOS|EdgiOS|Instagram|FBAN|FBAV/i.test(navigator.userAgent);
+  let deferred=null;
+  const banner=$('inst'),panel=$('inst-panel');
+  const dismissed=()=>{const t=store.get(KEY,0);return t&&Date.now()-t<DAYS*864e5};
+  function refresh(){
+    if(standalone()){banner.hidden=true;$('inst-txt').textContent='O Limamar já está instalado neste celular.';$('inst-btn').hidden=true;return}
+    $('inst-btn').hidden=!(deferred||ios);
+    if(!deferred&&!ios)$('inst-txt').textContent='Abra este endereço no Chrome (Android) ou no Safari (iPhone) para instalar o Limamar na tela inicial.';
+  }
+  function showBanner(){if(!standalone()&&!dismissed()&&!document.documentElement.classList.contains('locked'))banner.hidden=false}
+  async function go(){
+    if(deferred){deferred.prompt();const r=await deferred.userChoice.catch(()=>({}));deferred=null;if(r.outcome==='accepted')banner.hidden=true;refresh();return}
+    if(ios){$('ios-extra').textContent=iosOther?'No iPhone, a instalação funciona pelo Safari. Se você abriu por outro app, copie o endereço e abra no Safari.':'';const d=$('inst-ios');d.showModal?d.showModal():d.setAttribute('open','')}
+  }
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;refresh();showBanner()});
+  window.addEventListener('appinstalled',()=>{banner.hidden=true;deferred=null;refresh()});
+  $('inst-go').onclick=go;$('inst-btn').onclick=go;
+  $('inst-no').onclick=()=>{store.set(KEY,Date.now());banner.hidden=true};
+  $('ios-x').onclick=$('ios-ok').onclick=()=>$('inst-ios').close();
+  $('inst-ios').addEventListener('click',e=>{if(e.target===$('inst-ios'))$('inst-ios').close()});
+  refresh();
+  if(ios&&!standalone())setTimeout(showBanner,2500);
+  return {refresh,showBanner};
+})();
 function flash(t){const s=$('status');const old=s.textContent,oc=s.className;s.textContent=t;s.className='status';setTimeout(()=>{s.textContent=old;s.className=oc},2500)}
 
 function renderTide(loc){
