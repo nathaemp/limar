@@ -1,5 +1,5 @@
 // Limamar: guarda o app e a carta no celular para abrir sem sinal.
-const SHELL_CACHE = 'limar-v3';
+const SHELL_CACHE = 'limar-v4';
 const CARTA_CACHE = 'limar-cartas-v1';
 const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'cartas/cartas.json'];
 

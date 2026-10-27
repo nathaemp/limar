@@ -23,7 +23,7 @@ def text(s):
     s = re.sub(r"<[^>]+>", "", s)
     return "\n".join(l.strip() for l in html.unescape(s).splitlines() if l.strip())
 
-avisos = []
+avisos, vistos = [], set()
 for grupo in re.split(r'<div class="grupo-area-avisos">', pt)[1:]:
     am = re.search(r"<strong>\s*(ÁREA[^<]+)</strong>", grupo)
     area = text(am.group(1)) if am else ""
@@ -31,19 +31,34 @@ for grupo in re.split(r'<div class="grupo-area-avisos">', pt)[1:]:
         attrs, body = b.group(1), text(b.group(2))
         g = lambda k: (re.search(k + r'="([^"]*)"', attrs) or [None, None])[1]
         linhas = body.splitlines()
+        numero = g("data-numero")
+        if not area or not numero or numero in vistos:
+            continue
+        vistos.add(numero)
         avisos.append({
             "area": area,
-            "numero": g("data-numero"),
+            "numero": numero,
             "inicio": g("data-inicio-utc"),
             "fim": g("data-fim-utc"),
             "tipo": next((l for l in linhas if l.startswith("AVISO DE")), ""),
             "texto": body,
         })
 
+# Só regrava se os avisos mudaram ou se a última gravação tem mais de 3 h
+agora = datetime.now(timezone.utc)
+try:
+    antigo = json.load(open(OUT, encoding="utf-8"))
+    idade = (agora - datetime.strptime(antigo["baixado"], "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)).total_seconds()
+    if antigo.get("avisos") == avisos and idade < 3 * 3600:
+        print("sem mudança nos avisos")
+        raise SystemExit(0)
+except (OSError, ValueError, KeyError):
+    pass
+
 dados = {
     "fonte": "Marinha do Brasil · CHM · Serviço Meteorológico Marinho",
     "url": URL,
-    "baixado": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "baixado": agora.strftime("%Y-%m-%dT%H:%M:%SZ"),
     "avisos": avisos,
 }
 with open(OUT, "w", encoding="utf-8") as f:

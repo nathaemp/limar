@@ -69,6 +69,66 @@ header.top h1{font-size:2rem;line-height:1;font-weight:700}
 .stop .dot{background:var(--stop)} .stop .pill{background:var(--stop-bg);color:var(--stop)}
 .spot .metrics{font-size:.8rem;color:var(--muted)}
 
+/* Ilhas e praias por região */
+.seg.seg2{grid-template-columns:repeat(2,1fr)}
+.seg.seg2 button{font-family:var(--display);font-size:1.15rem;padding:8px 4px}
+.zones{display:grid;gap:10px}
+.zone{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.zone summary{list-style:none;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 14px;cursor:pointer}
+.zone summary::-webkit-details-marker{display:none}
+.zone summary:focus-visible{outline:3px solid var(--sand);outline-offset:-3px}
+.zone .name{font-weight:700}
+.zone .note{font-size:.82rem;color:var(--muted)}
+.zone .right{text-align:right;display:grid;gap:4px;justify-items:end}
+.zone .metrics{font-size:.8rem;color:var(--muted)}
+.zone .chev{display:inline-block;transition:transform .15s;color:var(--muted);font-size:.8rem;margin-left:4px}
+.zone[open] .chev{transform:rotate(90deg)}
+.places{display:flex;flex-wrap:wrap;gap:8px;padding:0 14px 14px}
+.place{display:inline-flex;align-items:baseline;gap:6px;padding:8px 12px;border-radius:999px;border:1px solid var(--line);background:var(--bay-soft);color:var(--ink);font-weight:700;font-size:.92rem}
+.place small{font-weight:700;font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* Avisos da Marinha */
+.aviso{border-radius:12px;padding:14px;display:grid;gap:6px;background:var(--warn-bg);color:var(--ink);border:1px solid var(--warn)}
+.aviso.stop{background:var(--stop-bg);border-color:var(--stop)}
+.aviso .t{font-family:var(--display);font-size:1.3rem;font-weight:700;line-height:1.1}
+.aviso .w{font-size:.85rem;font-weight:700;color:var(--warn)}
+.aviso.stop .w{color:var(--stop)}
+.aviso details{font-size:.82rem}
+.aviso pre{white-space:pre-wrap;font-family:var(--mono);font-size:.76rem;margin:6px 0 0}
+.mar-ok{font-size:.82rem;color:var(--muted);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mar-ok::before{content:"";width:9px;height:9px;border-radius:50%;background:var(--go);flex:none}
+.mar-ok.unk::before{background:var(--line)}
+
+/* Ficha do lugar */
+dialog.sheet{border:0;padding:0;margin:auto auto 0;width:100%;max-width:560px;max-height:88dvh;border-radius:18px 18px 0 0;background:var(--bg);color:var(--ink);overflow:auto}
+dialog.sheet::backdrop{background:rgba(4,22,27,.55)}
+.sheet .in{padding:16px max(16px,env(safe-area-inset-left,0px)) calc(20px + env(safe-area-inset-bottom,0px));display:grid;gap:14px}
+.sheet .hd{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:start}
+.sheet .hd h2{font-size:1.9rem;line-height:1}
+.sheet .x{width:44px;height:44px;padding:0;border-radius:50%;font-size:1.4rem;line-height:1}
+.sheet .st{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.sheet .st.go .pill{background:var(--go-bg);color:var(--go)} .sheet .st.warn .pill{background:var(--warn-bg);color:var(--warn)} .sheet .st.stop .pill{background:var(--stop-bg);color:var(--stop)}
+.sheet .wx{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+.sheet .wx .ico{width:44px;height:44px}
+.hrs{display:grid;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.hr{display:grid;grid-template-columns:3em 28px 1fr auto;gap:10px;align-items:center;padding:7px 12px;border-top:1px solid var(--line);font-size:.9rem}
+.hr:first-child{border-top:0}
+.hr .ico{width:26px;height:26px}
+.hr .wd2{display:flex;align-items:center;gap:6px}
+.hr .ar{width:16px;height:16px;flex:none;color:var(--muted)}
+.hr .rp{font-family:var(--mono);font-size:.8rem;color:var(--muted);text-align:right;min-width:3em}
+.hr.hi .num{color:var(--warn);font-weight:700} .hr.max .num{color:var(--stop);font-weight:700}
+
+/* Nomes na carta */
+.marks{position:absolute;inset:0;z-index:2;pointer-events:none}
+.mk{position:absolute;display:flex;align-items:center;gap:4px;transform:translate(-5px,-50%);pointer-events:auto;cursor:pointer;white-space:nowrap}
+.mk i{width:10px;height:10px;border-radius:50%;background:#e9b949;border:2px solid #0d2a33;flex:none}
+.mk.go i{background:#4cc37e} .mk.warn i{background:#e3a849} .mk.stop i{background:#ef6b5c}
+.mk span{font-size:.72rem;font-weight:700;color:#fff;text-shadow:0 0 3px #000,0 0 2px #000,0 1px 2px #000}
+.mk.nolabel span{display:none}
+.mk.hl i{width:16px;height:16px;border-width:3px}
+.mk.hl span{font-size:.85rem}
+
 .panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:grid;gap:12px}
 .hours{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;height:150px}
 .hours .bar{display:grid;grid-template-rows:auto 1fr auto auto;gap:3px;height:100%;text-align:center;font-size:.72rem;min-width:0}
@@ -195,6 +255,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
   <!-- HOJE -->
   <section id="v-hoje" class="view">
     <div style="display:grid;gap:18px">
+      <div id="avisos" style="display:grid;gap:10px"></div>
       <div class="verdict">
         <div class="q">Dá pra sair hoje?</div>
         <div class="a" id="vd-a">Buscando previsão…</div>
@@ -218,9 +279,14 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
 
       <div style="display:grid;gap:10px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap">
-          <h2>Pontos de passeio</h2><span class="legend">pior momento nas próximas 6 h</span>
+          <h2>Ilhas e praias</h2><span class="legend">pior momento nas próximas 6 h</span>
         </div>
-        <div class="list" id="spots"></div>
+        <div class="seg seg2" role="group" aria-label="Região da baía">
+          <button type="button" data-reg="norte" aria-pressed="true">Norte</button>
+          <button type="button" data-reg="sul" aria-pressed="false">Sul</button>
+        </div>
+        <p class="legend" id="reg-desc" style="margin:0"></p>
+        <div class="zones" id="zones"><p class="legend">Buscando previsão…</p></div>
       </div>
 
       <div class="panel">
@@ -231,7 +297,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
       </div>
 
       <div class="row"><button id="refresh" type="button">Atualizar previsão</button></div>
-      <p class="note-box">Previsão de modelo numérico (Open-Meteo). Ajuda a planejar, mas não substitui o boletim da Marinha nem o olho do mestre. Os limites de bom, atenção e não ir são provisórios e vão ser ajustados com os barqueiros.</p>
+      <p class="note-box">Vento, tempo e onda: previsão de modelos numéricos (ECMWF, GFS e outros) entregue pelo Open-Meteo, renovada a cada hora. Avisos de mau tempo: Marinha do Brasil (CHM), conferidos a cada 30 minutos. Posição das ilhas e praias: © colaboradores do OpenStreetMap. Ajuda a planejar, mas não substitui o olho do mestre. Os limites de bom, atenção e não ir são provisórios e vão ser ajustados com os barqueiros.</p>
     </div>
   </section>
 
@@ -245,6 +311,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
       </div>
       <div class="map" id="map" aria-label="Mapa da baía de Paraty">
         <div class="tiles" id="tiles"></div>
+        <div class="marks" id="marks"></div>
         <div class="boat" id="boat" hidden><div class="acc" id="boat-acc"></div>
           <svg viewBox="0 0 30 30" id="boat-ico"><circle cx="15" cy="15" r="7" fill="#e9b949" stroke="#0d2a33" stroke-width="2.5"/></svg></div>
         <div class="hud"><span>Veloc.</span><span>Rumo</span><span>Vento</span>
@@ -338,6 +405,8 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
   </section>
 </div>
 
+<dialog class="sheet" id="sheet" aria-labelledby="pl-name"><div class="in" id="sheet-in"></div></dialog>
+
 <nav class="tabs" role="tablist" aria-label="Seções">
   <button class="tab" role="tab" data-v="hoje" aria-selected="true">Hoje</button>
   <button class="tab" role="tab" data-v="carta" aria-selected="false">Carta</button>
@@ -356,19 +425,62 @@ const dirTxt=g=>g==null?'':DIR16[Math.round(((g%360)+360)%360/22.5)%16];
 const TZ='America/Sao_Paulo';
 $('hoje').textContent=new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'numeric',month:'short',timeZone:TZ}).format(new Date());
 
-/* ---------- Pontos ---------- */
-// Coordenadas aproximadas; o modelo de vento trabalha em grade de alguns km.
+/* ---------- Ilhas e praias ---------- */
+// Coordenadas: OpenStreetMap; Ilha do Ventura pelo Portal Náutico; Canto do Morro aproximado.
+// Cada área tem um ponto de previsão no mar. O modelo trabalha em grade de alguns km,
+// então os lugares da mesma área compartilham a mesma previsão.
 const CAIS={lat:-23.2185,lon:-44.7125};
 const BAIA={lat:-23.20,lon:-44.60};          // ponto de mar aberto da baía para onda e maré
-const SPOTS=[
-  {n:'Ilha Comprida',note:'Baía abrigada',lat:-23.205,lon:-44.665,open:false},
-  {n:'Lagoa Azul · Ilha da Cotia',note:'Baía abrigada',lat:-23.170,lon:-44.655,open:false},
-  {n:'Praia Vermelha',note:'Baía abrigada',lat:-23.160,lon:-44.680,open:false},
-  {n:'Saco do Mamanguá',note:'Atenção à maré no fundo do saco',lat:-23.280,lon:-44.640,open:false},
-  {n:'Ilha do Algodão',note:'Mais exposta ao vento',lat:-23.170,lon:-44.590,open:false},
-  {n:'Praia do Sono',note:'Mar aberto',lat:-23.345,lon:-44.630,open:true},
-  {n:'Trindade · Caixa d’Aço',note:'Mar aberto',lat:-23.360,lon:-44.715,open:true}
+const REGS={
+  norte:'Do cais para o norte: Ilha do Araújo, Praia Grande, Ilha do Ventura, Ilha do Cedro, São Gonçalo e Tarituba.',
+  sul:'Do cais para o sul e a saída da baía: Praia Vermelha, Lula, Saco da Velha, Ilha dos Cocos, Paraty-Mirim, Mamanguá e Cajaíba.'
+};
+const ZONES=[
+  {id:'n1',reg:'norte',n:'Ilhas perto do cais',lat:-23.180,lon:-44.680,open:false,p:[
+    ['Ilha do Itu',-23.1876,-44.7105],['Ilha dos Micos',-23.1817,-44.6859],['Ilha do Malvão',-23.1781,-44.6829],
+    ['Ilha Sapeca',-23.1735,-44.6799],['Ilha Comprida do Norte',-23.1710,-44.6765],['Ilha do Mantimento',-23.1848,-44.6579],
+    ['Ilha dos Ganchos',-23.1747,-44.6346]]},
+  {id:'n2',reg:'norte',n:'Ilha do Araújo e Praia Grande',lat:-23.150,lon:-44.676,open:false,p:[
+    ['Ilha do Araújo',-23.1562,-44.6865],['Ilha Rapada',-23.1612,-44.6638],['Praia Grande',-23.1521,-44.6972],
+    ['Prainha da Praia Grande',-23.1487,-44.6957],['Ilha do Ventura',-23.1300,-44.6867]]},
+  {id:'n3',reg:'norte',n:'Barra Grande e Ilha do Pico',lat:-23.108,lon:-44.672,open:false,p:[
+    ['Laje Branca',-23.1222,-44.6674],['Ilha do Pico',-23.1125,-44.6762],['Ilha Redonda',-23.1091,-44.6799],
+    ['Ilha Itaca',-23.1080,-44.6874],['Ilha Comprida da Barra Grande',-23.0977,-44.6714]]},
+  {id:'n4',reg:'norte',n:'Taquari, Iriri e Ilha do Cedro',lat:-23.062,lon:-44.640,open:false,p:[
+    ['Ilha do Cedro',-23.0715,-44.6425],['Praia do Canto do Morro',-23.0490,-44.6500,1],['Praia do Iriri',-23.0478,-44.6465],
+    ['Praia do Tatu',-23.0477,-44.6416]]},
+  {id:'n5',reg:'norte',n:'São Gonçalo, Pelado e Tarituba',lat:-23.063,lon:-44.605,open:false,p:[
+    ['Ilha do Pelado',-23.0581,-44.6221],['Ilha Comprida de São Gonçalo',-23.0607,-44.6071],['Ilha Araçatiba',-23.0871,-44.5942],
+    ['Praia de Tarituba',-23.0459,-44.5951],['Taritubinha',-23.0496,-44.5902]]},
+  {id:'s1',reg:'sul',n:'Ilhas perto do cais',lat:-23.208,lon:-44.690,open:false,p:[
+    ['Ilha dos Pombos',-23.2048,-44.7095],['Ilha da Bexiga',-23.2164,-44.6915],['Ilhas Duas Irmãs',-23.2096,-44.6894],
+    ['Ilha Rasa',-23.2055,-44.6823],['Ilha dos Cachorros',-23.2006,-44.6726],['Praia dos Vagabundos',-23.2245,-44.6908]]},
+  {id:'s2',reg:'sul',n:'Praia Vermelha, Lula e Ilha Comprida',lat:-23.192,lon:-44.633,open:false,p:[
+    ['Praia de Santa Rita',-23.1916,-44.6455],['Praia Vermelha',-23.1958,-44.6440],['Ilha da Pescaria',-23.1933,-44.6358],
+    ['Praia da Lula',-23.1968,-44.6297],['Ilha do Catimbau',-23.1947,-44.6254],['Ilha Comprida',-23.1909,-44.6228]]},
+  {id:'s3',reg:'sul',n:'Saco da Velha, Conceição e Lagoa Azul',lat:-23.205,lon:-44.617,open:false,p:[
+    ['Praia da Conceição',-23.2024,-44.6268],['Lagoa Azul',-23.2045,-44.6213],['Saco da Velha',-23.2104,-44.6198],
+    ['Praia da Preguiça',-23.2089,-44.6242],['Ilha dos Ratos',-23.1953,-44.6077]]},
+  {id:'s4',reg:'sul',n:'Ilha do Algodão e Ilha dos Cocos',lat:-23.200,lon:-44.588,open:true,p:[
+    ['Ilha do Algodão',-23.2128,-44.6001],['Ilha Sernambi',-23.2109,-44.5841],['Ilha dos Cocos',-23.2005,-44.5817],
+    ['Ilha dos Meros',-23.1862,-44.5751]]},
+  {id:'s5',reg:'sul',n:'Paraty-Mirim e Ilha da Cotia',lat:-23.232,lon:-44.648,open:false,p:[
+    ['Ilha da Cotia',-23.2260,-44.6417],['Praia da Barra',-23.2380,-44.6357],['Praia de Paraty-Mirim',-23.2401,-44.6334],
+    ['Praia do Furado',-23.2363,-44.6452],['Praia da Caieira',-23.2397,-44.6569],['Ilha das Almas',-23.2397,-44.6703]]},
+  {id:'s6',reg:'sul',n:'Saco do Mamanguá',lat:-23.272,lon:-44.636,open:false,note:'Atenção à maré no fundo do saco',p:[
+    ['Praia da Espada Velha',-23.2524,-44.6338],['Ilha Grande do Mamanguá',-23.2735,-44.6308],['Praia do Cruzeiro',-23.2670,-44.6229,1],
+    ['Ilha Pequena',-23.2799,-44.6363],['Fundo do Mamanguá',-23.2960,-44.6590,1]]},
+  {id:'s7',reg:'sul',n:'Cajaíba e Enseada do Pouso',lat:-23.255,lon:-44.568,open:true,p:[
+    ['Ilha Deserta',-23.2218,-44.5558],['Praia Deserta',-23.2478,-44.5782],['Praia da Venda',-23.2435,-44.5971],
+    ['Praia Grande da Cajaíba',-23.2674,-44.5825],['Ilha Itaoca',-23.2659,-44.5701],['Praia Itaoca',-23.2710,-44.5734],
+    ['Praia dos Calhaus',-23.2723,-44.5651],['Praia de Itanema',-23.2736,-44.5599],['Pouso da Cajaíba',-23.2742,-44.5486],
+    ['Praia Toca do Carro',-23.2724,-44.5515]]},
+  {id:'s8',reg:'sul',n:'Fora da baía · mar aberto',lat:-23.320,lon:-44.600,open:true,note:'Mar aberto',p:[
+    ['Praia da Sumaca',-23.2876,-44.5294],['Praia Martins de Sá',-23.3038,-44.5536],['Praia do Sono',-23.3450,-44.6300,1],
+    ['Trindade · Caixa d’Aço',-23.3600,-44.7150,1]]}
 ];
+const PLACES=[];ZONES.forEach(z=>z.p.forEach(([n,lat,lon,aprox])=>PLACES.push({id:z.id+'-'+PLACES.length,n,lat,lon,aprox:!!aprox,z})));
+const kind=n=>/^(Ilha|Ilhas|Ilhota)/.test(n)?'Ilha':/^Laje/.test(n)?'Laje':/^(Praia|Prainha|Taritubinha|Pouso|Trindade)/.test(n)?'Praia':/^(Saco|Lagoa|Fundo)/.test(n)?'Enseada':'Lugar';
 // Regras provisórias (a ajustar com os barqueiros)
 const RULE={gustWarn:15,gustStop:24,waveWarn:1.2,waveStop:2.0,rainWarn:70};
 
@@ -385,7 +497,7 @@ function classify(gust,wave,rain,storm,heavy,open){
 /* ---------- Busca de dados ---------- */
 const join=(arr,k)=>arr.map(p=>p[k].toFixed(4)).join(',');
 function urlWeather(){
-  const pts=[CAIS,...SPOTS];
+  const pts=[CAIS,...ZONES];
   return 'https://api.open-meteo.com/v1/forecast?latitude='+join(pts,'lat')+'&longitude='+join(pts,'lon')+
   '&hourly=wind_speed_10m,wind_gusts_10m,wind_direction_10m,precipitation_probability,precipitation,weather_code,temperature_2m,is_day'+
   '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,precipitation_sum'+
@@ -396,20 +508,22 @@ function urlMarine(pts){
   '&hourly=wave_height,swell_wave_height,sea_level_height_msl&timezone='+encodeURIComponent(TZ)+'&forecast_days=2';
 }
 const asArr=x=>Array.isArray(x)?x:[x];
+const DKEY='np-data3';
 async function getJSON(u){const r=await fetch(u);if(!r.ok)throw new Error('HTTP '+r.status);return r.json()}
 
 async function load(force){
-  const cached=store.get('np-data2',null);
+  loadAvisos();
+  const cached=store.get(DKEY,null);
   if(cached&&!force&&Date.now()-cached.t<20*60*1000){render(cached,false);return}
   if(cached)render(cached,false);
   setStatus('Atualizando…','');
   try{
     const w=asArr(await getJSON(urlWeather()));
     let m;
-    try{m=asArr(await getJSON(urlMarine([BAIA,...SPOTS])))}
+    try{m=asArr(await getJSON(urlMarine([BAIA,...ZONES])))}
     catch(e){m=asArr(await getJSON(urlMarine([BAIA])))}
     const data={t:Date.now(),w,m};
-    store.set('np-data2',data);render(data,false);
+    store.set(DKEY,data);render(data,false);
   }catch(e){
     if(cached){render(cached,true)}
     else{setStatus('Sem conexão','err');$('vd-a').textContent='Sem previsão';$('vd-txt').textContent='Conecte à internet para baixar a previsão antes de sair. Depois ela fica salva no celular.'}
@@ -438,31 +552,29 @@ function render(d,offline){
   const waveFor=(n,mi)=>{const loc=d.m[n+1];const src=(loc&&loc.hourly&&loc.hourly.wave_height&&loc.hourly.wave_height[mi]!=null)?loc:mBay;return maxIn(src.hourly.wave_height,mi,mi+6).v};
   const mi=hourIndex(mBay);
 
-  const results=SPOTS.map((p,n)=>{
-    const L=d.w[n+1].hourly, k=hourIndex(d.w[n+1]);
+  const av=avisosNossos(true);   // avisos da Marinha em vigor agora na costa de Paraty
+  const results=ZONES.map((z,n)=>{
+    const loc=d.w[n+1];if(!loc||!loc.hourly)return {...z,s:'go',why:[],missing:true};
+    const L=loc.hourly, k=hourIndex(loc);
     const g=maxIn(L.wind_gusts_10m,k,k+6), w=maxIn(L.wind_speed_10m,k,k+6);
     const r=maxIn(L.precipitation_probability,k,k+6).v||0;
     let storm=false,heavy=false;for(let q=k;q<=k+6;q++){const wc=L.weather_code[q]||0;if(wc>=95)storm=true;if([63,65,81,82].includes(wc))heavy=true}
     const wave=waveFor(n,mi);
-    const c=classify(g.v||0,wave,r,storm,heavy,p.open);
-    return {...p,...c,wind:w.v,gust:g.v,gustAt:L.time[g.at],wave,dir:L.wind_direction_10m[k]};
+    const c=classify(g.v||0,wave,r,storm,heavy,z.open);
+    if(av.length){if(c.s==='go')c.s='warn';if(z.open&&av.some(a=>a.forte))c.s='stop';c.why.unshift('aviso da Marinha')}
+    return {...z,...c,wind:w.v,gust:g.v,gustAt:L.time[g.at],wave,dir:L.wind_direction_10m[k],k};
   });
-
-  $('spots').innerHTML=results.map(p=>`
-    <div class="spot ${p.s}">
-      <span class="dot" aria-hidden="true"></span>
-      <div style="min-width:0"><div class="name">${p.n}</div><div class="note">${p.why.length?cap(p.why.join(', '))+(p.s!=='go'&&p.gust>=RULE.gustWarn?' perto das '+hhmm(p.gustAt):''):p.note}</div></div>
-      <div style="text-align:right;display:grid;gap:4px;justify-items:end"><span class="pill">${LAB[p.s]}</span>
-      <span class="metrics num">${fmt(p.wind,0)}–${fmt(p.gust,0)} kn${p.open?' · '+fmt(p.wave)+' m':''}</span></div>
-    </div>`).join('');
+  LAST={d,results,mi};
+  renderZones();
+  try{Carta.marks()}catch(e){}
 
   const shel=results.filter(p=>!p.open), open=results.filter(p=>p.open);
   const worst=a=>a.some(p=>p.s==='stop')?'stop':a.some(p=>p.s==='warn')?'warn':'go';
   const ws=worst(shel), wo=worst(open);
   let a,t;
-  if(ws==='go'&&wo==='go'){a='Sim, mar tranquilo';t='Vento fraco e mar bom em todos os pontos nas próximas horas.'}
-  else if(ws==='go'){a='Sim, dentro da baía';t='Para fora da baía ('+open.filter(p=>p.s!=='go').map(p=>p.n.split(' ·')[0]).join(', ')+'), '+(wo==='stop'?'melhor não ir agora.':'vá com atenção.')}
-  else if(ws==='warn'){a='Com atenção';t='Rajadas ou chuva em parte da baía. Veja os pontos abaixo.'}
+  if(ws==='go'&&wo==='go'){a='Sim, mar tranquilo';t='Vento fraco e mar bom em todas as áreas nas próximas horas.'}
+  else if(ws==='go'){a='Sim, dentro da baía';t='Na parte mais exposta ('+open.filter(p=>p.s!=='go').map(p=>p.n.split(' ·')[0]).join(', ')+'), '+(wo==='stop'?'melhor não ir agora.':'vá com atenção.')}
+  else if(ws==='warn'){a='Com atenção';t=av.length?'A Marinha tem aviso de mau tempo para a nossa costa. Veja acima.':'Rajadas ou chuva em parte da baía. Veja as áreas abaixo.'}
   else {a='Melhor esperar';t='Vento forte dentro da baía nas próximas horas.'}
   $('vd-a').textContent=a;$('vd-txt').textContent=t;
   $('vd-w').textContent=fmt(H.wind_speed_10m[i],0)+' kn';$('vd-wl').textContent='Vento '+dirTxt(H.wind_direction_10m[i])+' no cais';
@@ -481,6 +593,111 @@ function render(d,offline){
   try{Carta.windNow()}catch(e){}
 }
 const cap=s=>s.charAt(0).toUpperCase()+s.slice(1);
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+
+/* ---------- Norte / Sul ---------- */
+let LAST=null, REG=store.get('np-reg','norte');
+const openZones=new Set();
+document.querySelectorAll('[data-reg]').forEach(b=>b.onclick=()=>{REG=b.dataset.reg;store.set('np-reg',REG);renderZones()});
+function zoneRes(z){return LAST&&LAST.results.find(r=>r.id===z.id)}
+function renderZones(){
+  document.querySelectorAll('[data-reg]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.reg===REG));
+  $('reg-desc').textContent=REGS[REG];
+  if(!LAST){return}
+  const list=LAST.results.filter(z=>z.reg===REG);
+  $('zones').innerHTML=list.map(z=>{
+    const why=z.missing?'Sem previsão para esta área agora':z.why.length?cap(z.why.join(', '))+(z.s!=='go'&&z.gust>=RULE.gustWarn?' perto das '+hhmm(z.gustAt):''):(z.note||(z.open?'Mais exposta ao vento e ao mar':'Abrigada'));
+    return `<details class="zone ${z.missing?'':z.s}" data-z="${z.id}"${openZones.has(z.id)?' open':''}>
+      <summary><span class="dot" aria-hidden="true"></span>
+        <div style="min-width:0"><div class="name">${esc(z.n)}<span class="chev" aria-hidden="true">▶</span></div><div class="note">${esc(why)} · ${z.p.length} lugares</div></div>
+        <div class="right"><span class="pill">${z.missing?'—':LAB[z.s]}</span>
+        <span class="metrics num">${z.missing?'':fmt(z.wind,0)+'–'+fmt(z.gust,0)+' kn '+dirTxt(z.dir)+(z.open&&z.wave!=null?' · '+fmt(z.wave)+' m':'')}</span></div>
+      </summary>
+      <div class="places">${PLACES.filter(p=>p.z.id===z.id).map(p=>`<button type="button" class="place" data-p="${p.id}"><small>${kind(p.n)}</small>${esc(p.n)}</button>`).join('')}</div>
+    </details>`}).join('');
+  $('zones').querySelectorAll('details').forEach(el=>el.addEventListener('toggle',()=>{el.open?openZones.add(el.dataset.z):openZones.delete(el.dataset.z)}));
+  $('zones').querySelectorAll('.place').forEach(b=>b.onclick=()=>openPlace(b.dataset.p));
+}
+renderZones();
+
+const arrow=deg=>`<svg class="ar" viewBox="0 0 16 16" aria-hidden="true"><g transform="rotate(${(deg??0)+180} 8 8)"><path d="M8 1.5 12.5 13 8 10.5 3.5 13Z" fill="currentColor"/></g></svg>`;
+function openPlace(id){
+  const p=PLACES.find(x=>x.id===id);if(!p)return;
+  const z=p.z, r=zoneRes(z), n=ZONES.indexOf(z);
+  const regName=z.reg==='norte'?'Norte':'Sul';
+  let body='';
+  if(!LAST||!r||r.missing){
+    body='<p class="legend">Sem previsão salva. Conecte à internet e toque em Atualizar previsão.</p>';
+  }else{
+    const loc=LAST.d.w[n+1],H=loc.hourly,k=hourIndex(loc);
+    const WC=H.weather_code||[],TMP=H.temperature_2m||[],P=H.precipitation_probability||[],DAY=H.is_day||[];
+    const mz=LAST.d.m[n+1],mb=LAST.d.m[0];
+    const wv=(mz&&mz.hourly&&mz.hourly.wave_height&&mz.hourly.wave_height[LAST.mi]!=null)?mz.hourly.wave_height[LAST.mi]:(mb&&mb.hourly&&mb.hourly.wave_height?mb.hourly.wave_height[LAST.mi]:null);
+    const why=r.why.length?cap(r.why.join(', '))+(r.s!=='go'&&r.gust>=RULE.gustWarn?' perto das '+hhmm(r.gustAt):''):'Vento e mar dentro do normal';
+    const rows=[];for(let q=k;q<Math.min(H.time.length,k+13);q++){const g=H.wind_gusts_10m[q];
+      rows.push(`<div class="hr ${g>=RULE.gustStop?'max':g>=RULE.gustWarn?'hi':''}"><span class="num">${q===k?'Agora':hhmm(H.time[q]).slice(0,2)+'h'}</span>${wxIcon(WC[q],DAY[q]!==0)}
+        <span class="wd2">${arrow(H.wind_direction_10m[q])}<span class="num">${fmt(H.wind_speed_10m[q],0)}–${fmt(g,0)} kn</span> <span class="legend">${dirTxt(H.wind_direction_10m[q])}</span></span>
+        <span class="rp">${(P[q]??0)>=10?P[q]+'%':''}</span></div>`)}
+    const when=new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:TZ}).format(new Date(LAST.d.t));
+    body=`<div class="st ${r.s}"><span class="pill">${LAB[r.s]}</span><span class="legend">${esc(why)} · próximas 6 h</span></div>
+      <div class="wx">${wxIcon(WC[k],DAY[k]!==0)}<div><div style="font-weight:700">${wxText(WC[k])} · ${fmt(TMP[k],0)}°</div><div class="legend">${P[k]!=null?'Chance de chuva '+P[k]+'%':''}</div></div></div>
+      <div class="grid2">
+        <div class="cell"><span>Vento agora</span><b>${fmt(H.wind_speed_10m[k],0)} kn ${dirTxt(H.wind_direction_10m[k])}</b></div>
+        <div class="cell"><span>Rajada agora</span><b>${fmt(H.wind_gusts_10m[k],0)} kn</b></div>
+        <div class="cell"><span>Rajada máx. 6 h</span><b>${fmt(r.gust,0)} kn</b></div>
+        <div class="cell"><span>${z.open?'Onda':'Onda lá fora'}</span><b>${wv!=null?fmt(wv)+' m':'—'}</b></div>
+      </div>
+      <div style="display:grid;gap:6px"><div class="eyebrow">Hora a hora · vento e rajada</div><div class="hrs">${rows.join('')}</div></div>
+      <p class="legend" style="margin:0">Previsão Open-Meteo (modelos ECMWF, GFS e outros) para a área ${esc(z.n)}, baixada às ${when}. ${z.open?'':'Onda: valor do mar aberto na entrada da baía; dentro da baía o mar costuma ser bem menor. '}${p.aprox?'Posição do lugar aproximada.':''}</p>`;
+  }
+  $('sheet-in').innerHTML=`<div class="hd"><div><div class="eyebrow">${kind(p.n)} · ${regName} · ${esc(z.n)}</div><h2 id="pl-name">${esc(p.n)}</h2></div>
+      <button type="button" class="ghost x" id="pl-x" aria-label="Fechar">×</button></div>
+    ${body}
+    <div class="row"><button type="button" id="pl-map">Ver na carta</button><button type="button" class="ghost" id="pl-rota">Pôr no roteiro</button></div>
+    <span class="legend" id="pl-msg" aria-live="polite"></span>`;
+  const dlg=$('sheet');
+  $('pl-x').onclick=()=>dlg.close();
+  $('pl-map').onclick=()=>{dlg.close();Carta.focus(p);show('carta')};
+  $('pl-rota').onclick=()=>{const f=$('f-rota');const cur=f.value.split(',').map(s=>s.trim()).filter(Boolean);
+    if(!cur.includes(p.n))cur.push(p.n);f.value=cur.join(', ');f.dispatchEvent(new Event('input'));$('pl-msg').textContent='Incluído no roteiro da aba Bordo.'};
+  if(dlg.showModal){if(!dlg.open)dlg.showModal()}else dlg.setAttribute('open','');
+}
+$('sheet').addEventListener('click',e=>{if(e.target===$('sheet'))$('sheet').close()});
+
+/* ---------- Avisos de mau tempo da Marinha ---------- */
+// Paraty fica na ÁREA CHARLIE (costeira, de Cabo de Santa Marta a Cabo Frio). A ÁREA BRAVO é o alto-mar do mesmo trecho.
+let AVISOS=store.get('np-avisos',null);
+function avisosNossos(soAgora){
+  const now=Date.now();
+  return ((AVISOS&&AVISOS.avisos)||[]).filter(a=>/CHARLIE/i.test(a.area)&&(!a.fim||Date.parse(a.fim)>now)&&(!soAgora||!a.inicio||Date.parse(a.inicio)<=now))
+    .map(a=>({...a,forte:/MUITO FORTE|VENTANIA|TEMPESTADE|FURAC|MUITO GROSSO|RESSACA/i.test(a.tipo+' '+a.texto)}));
+}
+async function loadAvisos(){
+  try{const r=await fetch('avisos.json',{cache:'no-cache'});if(!r.ok)throw 0;const j=await r.json();if(!Array.isArray(j.avisos))throw 0;
+    const changed=JSON.stringify(j.avisos)!==JSON.stringify(AVISOS&&AVISOS.avisos);AVISOS=j;store.set('np-avisos',j);renderAvisos();
+    if(changed){const c=store.get(DKEY,null);if(c)render(c,false)}}
+  catch(e){renderAvisos(true)}
+}
+function renderAvisos(offline){
+  const box=$('avisos'),now=Date.now();
+  const f=s=>new Intl.DateTimeFormat('pt-BR',{weekday:'short',day:'numeric',hour:'2-digit',minute:'2-digit',timeZone:TZ}).format(new Date(s));
+  const link='<a href="https://www.marinha.mil.br/chm/dados-do-smm-avisos-de-mau-tempo/avisos-de-mau-tempo" target="_blank" rel="noopener">ver na Marinha</a>';
+  if(!AVISOS){box.innerHTML=`<div class="mar-ok unk">Avisos da Marinha: ainda não carregados · ${link}</div>`;return}
+  const age=now-Date.parse(AVISOS.baixado);
+  const conf='conferido '+f(AVISOS.baixado)+(age>6*3600e3?' · pode estar desatualizado':'');
+  const ours=avisosNossos(false), fora=((AVISOS.avisos)||[]).filter(a=>/BRAVO/i.test(a.area)&&(!a.fim||Date.parse(a.fim)>now));
+  const card=(a,lab)=>{const ativo=!a.inicio||Date.parse(a.inicio)<=now;const forte=/MUITO FORTE|VENTANIA|TEMPESTADE|FURAC|MUITO GROSSO|RESSACA/i.test(a.tipo+' '+a.texto);
+    return `<div class="aviso ${forte&&ativo?'stop':''}" role="alert"><div class="eyebrow">Marinha do Brasil · ${lab}</div>
+      <div class="t">${esc(cap((a.tipo||'Aviso de mau tempo').toLowerCase()))}</div>
+      <div class="w">${ativo?'Em vigor até '+f(a.fim):'Começa '+f(a.inicio)+' · até '+f(a.fim)}</div>
+      <details><summary>Texto oficial (aviso ${esc(a.numero)})</summary><pre>${esc(a.texto)}</pre></details></div>`};
+  let html=ours.map(a=>card(a,'costa de Paraty (área Charlie)')).join('')+fora.map(a=>card(a,'alto-mar em frente (área Bravo)')).join('');
+  if(!ours.length)html=`<div class="mar-ok">Marinha: sem aviso de mau tempo para a costa de Paraty · ${conf} · ${link}</div>`+html;
+  else html+=`<div class="mar-ok unk">${conf} · ${link}</div>`;
+  if(offline)html+=`<div class="legend">Sem internet: avisos da última vez que o app atualizou.</div>`;
+  box.innerHTML=html;
+}
+renderAvisos();
 
 /* Previsão do tempo (códigos WMO) */
 function wxText(c){
@@ -680,9 +897,9 @@ const Carta=(()=>{
   const satOK=()=>!satDown&&navigator.onLine!==false;
   const effMode=()=>mode!=='carta'&&!satOK()?'carta':mode;
   const maxZ=()=>effMode()==='carta'?17:19;
-  function setMode(m){mode=m;store.set('np-mapmode',m);document.querySelectorAll('.seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
+  function setMode(m){mode=m;store.set('np-mapmode',m);document.querySelectorAll('#v-carta .seg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.mode===m));
     if(m!=='carta'&&!satOK())msg('Sem internet: mostrando a carta salva.');else msg('');req()}
-  document.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{satDown=false;satFails=0;setMode(b.dataset.mode)});
+  document.querySelectorAll('#v-carta .seg button').forEach(b=>b.onclick=()=>{satDown=false;satFails=0;setMode(b.dataset.mode)});
   window.addEventListener('online',()=>{satDown=false;satFails=0;req()});
   window.addEventListener('offline',()=>{if(mode!=='carta')msg('Sem internet: mostrando a carta salva.');req()});
   const el=$('map'),layer=$('tiles');
@@ -735,6 +952,8 @@ const Carta=(()=>{
       const inside=fix.lat>info.base[0]&&fix.lat<info.base[2]&&fix.lon>info.base[1]&&fix.lon<info.base[3];
       msg(inside?'':'Você está fora da área da carta.');
     }else b.hidden=true;
+    // nomes das ilhas e praias
+    drawMarks(left,top,r);
     // escala
     const mpp=r*Math.cos(Math.atan(Math.sinh(cy/RE)));   // metros reais por pixel
     const opts=[50,100,200,500,1000,1852,3704,9260];let best=opts[0];
@@ -743,6 +962,24 @@ const Carta=(()=>{
     try{store.set('np-map',{cx,cy,z:zoom})}catch(e){}
   }
   const req=()=>{if(!raf)raf=requestAnimationFrame(draw)};
+  const mk=$('marks');let mkBuilt=false,hl=null;
+  function buildMarks(){
+    mk.innerHTML=PLACES.map(p=>`<div class="mk" data-p="${p.id}"><i></i><span>${esc(p.n)}</span></div>`).join('');mkBuilt=true;
+    colorMarks();
+  }
+  function colorMarks(){if(!mkBuilt)return;
+    mk.querySelectorAll('.mk').forEach(el=>{const p=PLACES.find(x=>x.id===el.dataset.p);const r=zoneRes(p.z);
+      el.classList.remove('go','warn','stop');if(r&&!r.missing)el.classList.add(r.s);el.classList.toggle('hl',el.dataset.p===hl)})}
+  function drawMarks(left,top,r){
+    if(!mkBuilt)buildMarks();
+    const showNames=zoom>=13.3;
+    mk.querySelectorAll('.mk').forEach(el=>{const p=PLACES.find(x=>x.id===el.dataset.p);
+      const x=(mX(p.lon)-left)/r,y=(top-mY(p.lat))/r;
+      const vis=x>-20&&x<W+20&&y>-20&&y<H+20&&zoom>=12;
+      el.style.display=vis?'':'none';if(!vis)return;
+      el.style.left=x.toFixed(1)+'px';el.style.top=y.toFixed(1)+'px';
+      el.classList.toggle('nolabel',!showNames&&el.dataset.p!==hl)});
+  }
   function clampZ(z){return Math.max(MINZ,Math.min(maxZ(),z))}
   function zoomAt(nz,sx,sy){nz=clampZ(nz);const r=res(zoom),nr=res(nz);
     const wx=cx+(sx-W/2)*r, wy=cy-(sy-H/2)*r;cx=wx-(sx-W/2)*nr;cy=wy+(sy-H/2)*nr;zoom=nz;req()}
@@ -760,6 +997,8 @@ const Carta=(()=>{
   const up=e=>{pts.delete(e.pointerId);last=null};
   el.addEventListener('pointerup',e=>{const now=Date.now();
     const tap=down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<8;
+    if(pts.size===1&&tap){const hit=document.elementFromPoint(e.clientX,e.clientY);const m=hit&&hit.closest&&hit.closest('.mk');
+      if(m){up(e);lastTap=0;openPlace(m.dataset.p);return}}
     if(pts.size===1&&tap&&now-lastTap<300){const rc=el.getBoundingClientRect();zoomAt(zoom+1,e.clientX-rc.left,e.clientY-rc.top)}
     if(tap)lastTap=now;up(e)});
   el.addEventListener('pointercancel',up);
@@ -785,7 +1024,7 @@ const Carta=(()=>{
   function startGPS(){if(watchId!=null||!('geolocation' in navigator))return;
     watchId=navigator.geolocation.watchPosition(onFix,e=>{if(e.code===1)msg('Libere a localização para ver sua posição na carta.')},{enableHighAccuracy:true,maximumAge:2000,timeout:20000})}
   function stopGPS(){if(watchId!=null)navigator.geolocation.clearWatch(watchId);watchId=null}
-  function windNow(){const d=store.get('np-data2',null);if(!d)return;const c=d.w[0],i=hourIndex(c),H=c.hourly;
+  function windNow(){const d=store.get(DKEY,null);if(!d)return;const c=d.w[0],i=hourIndex(c),H=c.hourly;
     $('h-wind').textContent=fmt(H.wind_speed_10m[i],0)+' '+dirTxt(H.wind_direction_10m[i])}
   // Baixar para usar sem sinal
   const CACHE='limar-cartas-v1';
@@ -811,7 +1050,9 @@ const Carta=(()=>{
     }catch(e){$('dl-msg').textContent='Não consegui baixar agora. Confira a internet e tente de novo.'}
     btn.disabled=false;setTimeout(()=>bar.hidden=true,1500);
   };
-  return {show(){windNow();startGPS();req()},hide(){stopGPS()},windNow};
+  function focus(p){hl=p.id;follow=false;$('m-gps').classList.remove('on');$('m-gps').dataset.done=1;
+    cx=mX(p.lon);cy=mY(p.lat);zoom=Math.max(zoom,14.5);colorMarks();req()}
+  return {show(){windNow();startGPS();req()},hide(){stopGPS()},windNow,focus,marks(){colorMarks();req()}};
 })();
 
 /* ---------- Abas ---------- */
