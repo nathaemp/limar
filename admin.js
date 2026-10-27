@@ -87,7 +87,7 @@ root.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{secao=b.dataset.s;ro
 $('ad-x').onclick=fechar;$('ad-ref').onclick=()=>carrega();
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!root.hidden)fechar()});
 
-function abrir(){root.hidden=false;document.documentElement.style.overflow='hidden';carrega();clearInterval(timer);timer=setInterval(()=>{const ed=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#ad-po,#ad-ntfy');const digitado=['po-u','po-t'].some(i=>$(i)&&$(i).value);if(secao==='painel'&&document.visibilityState==='visible'&&!ed&&!digitado)carrega(true)},30000)}
+function abrir(){root.hidden=false;document.documentElement.style.overflow='hidden';carrega();clearInterval(timer);timer=setInterval(()=>{const ed=document.activeElement&&document.activeElement.closest&&document.activeElement.closest('#ad-po,#ad-ntfy,#ad-wg');const digitado=['po-u','po-t'].some(i=>$(i)&&$(i).value)||!!document.querySelector('#ad-wg textarea');if(secao==='painel'&&document.visibilityState==='visible'&&!ed&&!digitado)carrega(true)},30000)}
 function fechar(){root.hidden=true;document.documentElement.style.overflow='';clearInterval(timer)}
 
 async function carrega(silencioso){
@@ -217,14 +217,35 @@ else await w.presentMedium();
 Script.complete();
 `;
 }
-async function copiaTexto(t){try{await navigator.clipboard.writeText(t);return true}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();let ok=false;try{ok=document.execCommand('copy')}catch(_){}a.remove();return ok}}
-function widget(){
+// No iPhone, copiar só funciona se for feito na hora do toque (sem esperar a internet).
+// Por isso a chave é buscada antes, quando o quadro aparece.
+function copiaNaHora(t){
+  let ok=false;
+  const a=document.createElement('textarea');a.value=t;a.setAttribute('readonly','');a.style.cssText='position:fixed;top:0;left:0;opacity:0;font-size:16px';
+  document.body.appendChild(a);a.focus();a.select();try{a.setSelectionRange(0,t.length)}catch(e){}
+  try{ok=document.execCommand('copy')}catch(e){}
+  a.remove();
+  if(navigator.clipboard&&navigator.clipboard.writeText){try{navigator.clipboard.writeText(t).catch(()=>{});ok=true}catch(e){}}
+  return ok;
+}
+let wgChave=null;
+async function widget(){
   const c=$('wg-copiar'),nv=$('wg-nova');if(!c)return;
-  c.onclick=async()=>{const {data,error}=await sb.rpc('admin_widget_chave',{nova:false});if(error)return msg(erroTxt(error));
-    const ok=await copiaTexto(scriptWidget(data));msg(ok?'Script copiado. Agora cole no Scriptable.':'Não consegui copiar sozinho. Tente de novo pelo iPhone.',ok?'ok':'err')};
+  const box=$('ad-wg');
+  const mostra=t=>{let ta=box.querySelector('textarea.wg-txt');
+    if(!ta){ta=document.createElement('textarea');ta.className='wg-txt';ta.readOnly=true;ta.rows=6;
+      ta.style.cssText='width:100%;font-family:var(--mono);font-size:12px;border:1px solid var(--line);border-radius:10px;padding:8px;background:var(--surface);color:var(--ink)';
+      const p=document.createElement('p');p.className='legend';p.style.margin='0';p.textContent='Se não copiou sozinho: toque no quadro abaixo, toque em Selecionar Tudo e depois em Copiar.';
+      box.appendChild(p);box.appendChild(ta)}
+    ta.value=t;ta.onfocus=()=>{ta.select();try{ta.setSelectionRange(0,t.length)}catch(e){}}};
+  c.textContent='carregando…';
+  if(!wgChave){const {data,error}=await sb.rpc('admin_widget_chave',{nova:false});if(error){c.textContent='copiar script';return msg(erroTxt(error))}wgChave=data}
+  c.textContent='copiar script';
+  c.onclick=()=>{const t=scriptWidget(wgChave);const ok=copiaNaHora(t);mostra(t);
+    msg(ok?'Script copiado. Agora abra o Scriptable, toque em + e cole.':'Não deu para copiar sozinho: use o quadro que apareceu embaixo.',ok?'ok':'err')};
   nv.onclick=async()=>{if(!nv.classList.contains('sure')){nv.classList.add('sure');nv.textContent='toque de novo para trocar';setTimeout(()=>{if(nv.isConnected){nv.classList.remove('sure');nv.textContent='trocar a chave'}},4000);return}
     const {data,error}=await sb.rpc('admin_widget_chave',{nova:true});if(error)return msg(erroTxt(error));
-    const ok=await copiaTexto(scriptWidget(data));msg('Chave trocada. '+(ok?'O script novo já foi copiado: cole no Scriptable no lugar do antigo.':'Toque em copiar script e cole no Scriptable.'),'ok')};
+    wgChave=data;mostra(scriptWidget(data));msg('Chave trocada. Toque em copiar script e cole no Scriptable no lugar do antigo.','ok')};
 }
 
 /* ---------- avisos com som (Pushover) ---------- */
