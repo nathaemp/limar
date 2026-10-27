@@ -100,10 +100,9 @@ async function carrega(silencioso){
 }
 
 /* ---------- painel ---------- */
-const LINHAS=[['visitantes','Visitantes','Aparelhos diferentes que abriram o app'],['aberturas','Aberturas do app','Quantas vezes o app foi aberto'],
+const LINHAS=[['visitantes','Visitantes','Aparelhos diferentes que abriram o app'],
   ['usuarios_ativos','Usuários ativos','Contas que usaram o app'],['cadastros','Cadastros','Contas criadas'],['confirmados','E-mails confirmados','Contas que confirmaram o e-mail'],
-  ['cliques','Cliques em botões','Toques em botões do app'],['lugares','Ilhas e praias abertas','Fichas de lugares abertas'],
-  ['instalacoes','Instalações','Toques em Instalar e instalações concluídas'],['compartilhamentos','Compartilhamentos','Toques em Compartilhar o app']];
+  ['cliques','Cliques em botões','Toques em botões do app'],['instalacoes','Instalações','Toques em Instalar e instalações concluídas']];
 function rank(lista,vazio){if(!lista||!lista.length)return `<p class="empty">${vazio}</p>`;const max=Math.max(...lista.map(x=>x.n));
   return `<div class="rank">${lista.map(x=>`<div style="--w:${Math.max(4,x.n/max*100)}%"><span>${esc(x.item)}</span><b>${n0(x.n)}</b></div>`).join('')}</div>`}
 function painel(d){
@@ -128,7 +127,7 @@ function painel(d){
       ${LINHAS.map(([k,l,h])=>`<tr title="${esc(h)}"><td>${l}<small>${h}</small></td><td>${n0(P.dia&&P.dia[k])}</td><td>${n0(P.semana&&P.semana[k])}</td><td>${n0(P.mes&&P.mes[k])}</td></tr>`).join('')}
       </tbody></table></div>
     <div class="panel"><h2 style="font-size:1.3rem">Visitantes por dia</h2>
-      <div class="bars" role="img" aria-label="Visitantes nos últimos 14 dias">${serie.map((s,i)=>`<div title="${dataBR(s.dia)}: ${s.visitantes} visitantes, ${s.aberturas} aberturas"><i class="${i===serie.length-1?'hoje':''}" style="height:${s.visitantes/mx*100}%"></i><span>${diaCurto(s.dia)}</span></div>`).join('')}</div>
+      <div class="bars" role="img" aria-label="Visitantes nos últimos 14 dias">${serie.map((s,i)=>`<div title="${dataBR(s.dia)}: ${s.visitantes} visitantes"><i class="${i===serie.length-1?'hoje':''}" style="height:${s.visitantes/mx*100}%"></i><span>${diaCurto(s.dia)}</span></div>`).join('')}</div>
       <p class="legend" style="margin:0">Últimos 14 dias. A barra amarela é hoje.</p></div>
     <div class="cols">
       <div class="panel"><h2 style="font-size:1.15rem">Botões mais clicados</h2>${rank(d.top_cliques,'Ainda sem cliques.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
@@ -170,7 +169,7 @@ function cartao(u){
       <div style="min-width:0"><div class="nm">${esc(u.nome||'(sem nome)')}</div><div class="em">${esc(u.email)}</div></div></div>
     ${tags?`<div class="tags">${tags}</div>`:''}
     <div class="legend">${[u.funcao,u.barco&&'Barco '+u.barco].filter(Boolean).map(esc).join(' · ')||'—'}</div>
-    <div class="legend">Conta criada ${quando(u.criado)} · último uso ${quando(u.visto||u.ultimo_login)} · ${n0(u.aberturas_30d)} aberturas em 30 dias</div>
+    <div class="legend">Conta criada ${quando(u.criado)} · último uso ${quando(u.visto||u.ultimo_login)}</div>
     ${acts?`<div class="acts">${acts}</div>`:''}
     <div class="extra"></div>
   </div>`;
