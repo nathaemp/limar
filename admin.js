@@ -65,6 +65,24 @@ const css=document.createElement('style');css.textContent=`
 #admin .msg{font-size:.9rem;border-radius:10px;padding:10px 12px;margin:0}
 #admin .msg.err{background:var(--stop-bg);color:var(--stop)} #admin .msg.ok{background:var(--go-bg);color:var(--go)}
 #admin .empty{color:var(--muted);font-size:.9rem;margin:0}
+#admin details.sec{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+#admin details.sec>summary{list-style:none;display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:13px 14px;cursor:pointer}
+#admin details.sec>summary::-webkit-details-marker{display:none}
+#admin details.sec>summary b{font-family:var(--display);font-size:1.15rem;display:block;line-height:1.15}
+#admin details.sec>summary small{font-size:.8rem;color:var(--muted)}
+#admin details.sec>summary .chev{color:var(--muted);font-size:.8rem;transition:transform .15s}
+#admin details.sec[open]>summary .chev{transform:rotate(90deg)}
+#admin details.sec>summary:focus-visible{outline:3px solid var(--sand);outline-offset:-3px}
+#admin .sec-in{padding:0 14px 14px;display:grid;gap:12px}
+#admin details.user{padding:0;gap:0}
+#admin details.user>summary{list-style:none;display:grid;grid-template-columns:40px 1fr auto;gap:10px;align-items:center;padding:10px 12px;cursor:pointer}
+#admin details.user>summary::-webkit-details-marker{display:none}
+#admin details.user>summary .av{width:40px;height:40px}
+#admin details.user>summary .mini{display:flex;gap:4px;align-items:center}
+#admin details.user>summary .mini i{width:9px;height:9px;border-radius:50%;display:block}
+#admin details.user[open]>summary .chev{transform:rotate(90deg)}
+#admin details.user .chev{color:var(--muted);font-size:.8rem;transition:transform .15s}
+#admin details.user .user-in{padding:0 12px 12px;display:grid;gap:10px}
 `;document.head.appendChild(css);
 
 /* ---------- estrutura ---------- */
@@ -82,6 +100,11 @@ root.innerHTML=`<div class="box">
 </div>`;
 document.body.appendChild(root);
 let secao='painel',timer=null,USERS=[],filtro='todos',busca='';
+let ABERTAS=new Set();try{ABERTAS=new Set(JSON.parse(localStorage.getItem('lm-adm-abertas')||'[]'))}catch(e){}
+const guardaAbertas=()=>{try{localStorage.setItem('lm-adm-abertas',JSON.stringify([...ABERTAS]))}catch(e){}};
+root.addEventListener('toggle',e=>{const d=e.target;if(!(d instanceof HTMLDetailsElement)||!d.dataset.sec)return;
+  d.open?ABERTAS.add(d.dataset.sec):ABERTAS.delete(d.dataset.sec);guardaAbertas()},true);
+const sec=(id,titulo,resumo,corpo,attrs='')=>`<details class="sec" data-sec="${id}"${ABERTAS.has(id)?' open':''}${attrs}><summary><span><b>${titulo}</b>${resumo?`<small>${resumo}</small>`:''}</span><span class="chev" aria-hidden="true">▶</span></summary><div class="sec-in">${corpo}</div></details>`;
 const msg=(t,c)=>{$('ad-msg').innerHTML=t?`<p class="msg ${c||'err'}">${esc(t)}</p>`:'';if(t&&c==='ok')setTimeout(()=>{if($('ad-msg'))$('ad-msg').innerHTML=''},3000)};
 root.querySelectorAll('[data-s]').forEach(b=>b.onclick=()=>{secao=b.dataset.s;root.querySelectorAll('[data-s]').forEach(x=>x.setAttribute('aria-pressed',x===b));msg('');carrega()});
 $('ad-x').onclick=fechar;$('ad-ref').onclick=()=>carrega();
@@ -110,7 +133,7 @@ function painel(d){
   const serie=d.serie||[],mx=Math.max(1,...serie.map(s=>s.visitantes));
   const diaCurto=s=>new Date(s+'T12:00:00').toLocaleDateString('pt-BR',{day:'numeric'});
   const on=d.online_lista||[];
-  $('ad-body').innerHTML=`<div style="display:grid;gap:16px">
+  $('ad-body').innerHTML=`<div style="display:grid;gap:10px">
     <div class="kpis">
       <div class="kpi live"><b>${n0(d.online)}</b><span><i class="live-dot"></i>Online agora</span></div>
       <div class="kpi"><b>${n0(T.usuarios)}</b><span>Contas no total</span></div>
@@ -118,23 +141,21 @@ function painel(d){
       <div class="kpi"><b>${n0(T.cortesias)}</b><span>Cortesias ativas</span></div>
       <div class="kpi"><b>${n0(T.bloqueados)}</b><span>Bloqueados</span></div>
     </div>
-    <div class="panel"><h2 style="font-size:1.3rem">Quem está online</h2>
-      ${on.length?`<div class="rank">${on.map(u=>`<div style="--w:0%"><span><i class="live-dot"></i>${esc(u.nome)} <small style="color:var(--muted)">${esc(u.email)}</small></span><b>${quando(u.visto)}</b></div>`).join('')}</div>`:'<p class="empty">Nenhuma conta usando o app neste momento.</p>'}
-      ${d.online_anonimos?`<p class="legend" style="margin:0">+ ${n0(d.online_anonimos)} na tela de entrar (sem login).</p>`:''}
-      <p class="legend" style="margin:0">Conta como online quem usou o app nos últimos 2 minutos. Atualiza sozinho a cada 30 segundos.</p></div>
-    <div class="panel"><h2 style="font-size:1.3rem">Uso do app</h2>
-      <table><thead><tr><th></th><th>Hoje</th><th>7 dias</th><th>30 dias</th></tr></thead><tbody>
+    ${sec('online','Quem está online',on.length?n0(on.length)+(on.length===1?' conta usando agora':' contas usando agora'):'Ninguém logado agora',
+      (on.length?`<div class="rank">${on.map(u=>`<div style="--w:0%"><span><i class="live-dot"></i>${esc(u.nome)} <small style="color:var(--muted)">${esc(u.email)}</small></span><b>${quando(u.visto)}</b></div>`).join('')}</div>`:'<p class="empty">Nenhuma conta usando o app neste momento.</p>')
+      +(d.online_anonimos?`<p class="legend" style="margin:0">+ ${n0(d.online_anonimos)} na tela de entrar (sem login).</p>`:'')
+      +'<p class="legend" style="margin:0">Conta como online quem usou o app nos últimos 2 minutos.</p>')}
+    ${sec('uso','Uso do app',`Hoje: ${n0(P.dia&&P.dia.visitantes)} visitantes · ${n0(P.dia&&P.dia.cadastros)} cadastros`,
+      `<table><thead><tr><th></th><th>Hoje</th><th>7 dias</th><th>30 dias</th></tr></thead><tbody>
       ${LINHAS.map(([k,l,h])=>`<tr title="${esc(h)}"><td>${l}<small>${h}</small></td><td>${n0(P.dia&&P.dia[k])}</td><td>${n0(P.semana&&P.semana[k])}</td><td>${n0(P.mes&&P.mes[k])}</td></tr>`).join('')}
-      </tbody></table></div>
-    <div class="panel"><h2 style="font-size:1.3rem">Visitantes por dia</h2>
-      <div class="bars" role="img" aria-label="Visitantes nos últimos 14 dias">${serie.map((s,i)=>`<div title="${dataBR(s.dia)}: ${s.visitantes} visitantes"><i class="${i===serie.length-1?'hoje':''}" style="height:${s.visitantes/mx*100}%"></i><span>${diaCurto(s.dia)}</span></div>`).join('')}</div>
-      <p class="legend" style="margin:0">Últimos 14 dias. A barra amarela é hoje.</p></div>
-    <div class="cols">
-      <div class="panel"><h2 style="font-size:1.15rem">Botões mais clicados</h2>${rank(d.top_cliques,'Ainda sem cliques.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
-      <div class="panel"><h2 style="font-size:1.15rem">Abas mais usadas</h2>${rank(d.top_abas,'Ainda sem dados.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
-      <div class="panel"><h2 style="font-size:1.15rem">Ilhas e praias mais vistas</h2>${rank(d.top_lugares,'Ainda sem dados.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
-    </div>
-    <div class="panel" id="ad-wg"><h2 style="font-size:1.3rem">Widget no iPhone</h2>
+      </tbody></table>`)}
+    ${sec('serie','Visitantes por dia','Últimos 14 dias',
+      `<div class="bars" role="img" aria-label="Visitantes nos últimos 14 dias">${serie.map((s,i)=>`<div title="${dataBR(s.dia)}: ${s.visitantes} visitantes"><i class="${i===serie.length-1?'hoje':''}" style="height:${s.visitantes/mx*100}%"></i><span>${diaCurto(s.dia)}</span></div>`).join('')}</div>
+      <p class="legend" style="margin:0">A barra amarela é hoje.</p>`)}
+    ${sec('cliques','Botões mais clicados','Últimos 30 dias',rank(d.top_cliques,'Ainda sem cliques.'))}
+    ${sec('abas','Abas mais usadas','Últimos 30 dias',rank(d.top_abas,'Ainda sem dados.'))}
+    ${sec('lugares','Ilhas e praias mais vistas','Últimos 30 dias',rank(d.top_lugares,'Ainda sem dados.'))}
+    ${sec('widget','Widget no iPhone','Números na tela inicial',`<div id="ad-wg" style="display:grid;gap:10px">
       <p class="legend" style="margin:0">Mostra na tela inicial e na tela bloqueada quantas pessoas estão online, visitantes, cadastros e cliques de hoje. O iPhone atualiza sozinho mais ou menos a cada 5 a 15 minutos.</p>
       <ol style="margin:0;padding-left:20px;display:grid;gap:6px;font-size:.92rem">
         <li>Instale o app grátis <b>Scriptable</b> na App Store.</li>
@@ -144,9 +165,9 @@ function painel(d){
         <li>Tela bloqueada: segure o dedo, <b>Personalizar</b> › Tela Bloqueada, adicione o widget Scriptable e escolha o script Limamar.</li>
       </ol>
       <p class="legend" style="margin:0">Não compartilhe o script: ele leva a chave secreta dos números. Se ele vazar, toque em <button type="button" class="linkbtn" id="wg-nova">trocar a chave</button> (o widget antigo para de funcionar e você copia o script de novo).</p>
-    </div>
-    <div class="panel" id="ad-po"><h2 style="font-size:1.3rem">Avisos com som (Pushover)</h2><p class="empty">Carregando…</p></div>
-    <div class="panel" id="ad-ntfy"><h2 style="font-size:1.3rem">Avisos no celular</h2><p class="empty">Carregando…</p></div>
+    </div>`)}
+    ${sec('pushover','Avisos com som (Pushover)','Som para cada tipo de aviso','<div id="ad-po" style="display:grid;gap:10px"><p class="empty">Carregando…</p></div>')}
+    ${sec('ntfy','Avisos no app ntfy','Aviso simples, sem escolher som','<div id="ad-ntfy" style="display:grid;gap:10px"><p class="empty">Carregando…</p></div>')}
     <p class="legend" style="margin:0">Atualizado ${quando(d.agora)}. Seus próprios cliques dentro da administração não entram na conta.</p>
   </div>`;
   avisos();pushover();widget();
@@ -259,9 +280,9 @@ async function pushover(){
   const box=$('ad-po');if(!box)return;
   if(!poInfo){try{const {data,error}=await sb.rpc('admin_pushover');if(error)throw error;poInfo=data;
       poSons=Object.fromEntries(TIPOS.map(([k,,d])=>[k,(data.sons||{})[k]||d]))}
-    catch(e){box.innerHTML='<h2 style="font-size:1.3rem">Avisos com som (Pushover)</h2><p class="empty">'+esc(erroTxt(e))+'</p>';return}}
+    catch(e){box.innerHTML='<p class="empty">'+esc(erroTxt(e))+'</p>';return}}
   const on=poInfo.configurado;
-  box.innerHTML=`<h2 style="font-size:1.3rem">Avisos com som (Pushover)</h2>
+  box.innerHTML=`
     <p class="legend" style="margin:0">${on?'Ligado. Escolha o som de cada aviso e toque em <b>Testar</b> para ouvir no celular.'
       :'Instale o app <b>Pushover</b> e crie a conta. No site <b>pushover.net</b>, copie a sua <b>User Key</b> e crie um aplicativo (<i>Create an Application</i>) para pegar a <b>API Token</b>. Cole as duas aqui.'}</p>
     <div class="cols" style="gap:8px">
@@ -293,8 +314,8 @@ async function pushover(){
 let ntfyLido=false,ntfyCanal=null;
 async function avisos(){
   const box=$('ad-ntfy');if(!box)return;
-  if(!ntfyLido){try{const {data,error}=await sb.rpc('admin_ntfy');if(error)throw error;ntfyCanal=data||null;ntfyLido=true}catch(e){box.innerHTML='<h2 style="font-size:1.3rem">Avisos no celular</h2><p class="empty">'+esc(erroTxt(e))+'</p>';return}}
-  box.innerHTML=`<h2 style="font-size:1.3rem">Avisos no celular</h2>
+  if(!ntfyLido){try{const {data,error}=await sb.rpc('admin_ntfy');if(error)throw error;ntfyCanal=data||null;ntfyLido=true}catch(e){box.innerHTML='<p class="empty">'+esc(erroTxt(e))+'</p>';return}}
+  box.innerHTML=`
     <p class="legend" style="margin:0">Chega na hora no iPhone, mesmo com o app fechado: cada <b>cadastro novo</b> e cada <b>e-mail confirmado</b>. Instale o app <b>ntfy</b>, toque em <b>+</b> e assine o canal abaixo (servidor ntfy.sh). Quem souber o nome do canal consegue ler os avisos, então não divulgue.</p>
     <div class="inline"><label class="f">Canal<input type="text" id="nt-canal" value="${esc(ntfyCanal||'')}" maxlength="64" autocomplete="off" spellcheck="false"></label>
       <button type="button" id="nt-salvar">${ntfyCanal?'Enviar teste':'Ligar'}</button></div>
@@ -314,6 +335,7 @@ function usuarios(){
   $('ad-body').innerHTML=`<div style="display:grid;gap:12px">
     <input type="search" id="ad-q" placeholder="Buscar por nome, e-mail ou barco" value="${esc(busca)}" aria-label="Buscar usuário">
     <div class="filters">${FILTROS.map(([k,l])=>`<button type="button" data-f="${k}" aria-pressed="${filtro===k}">${l} (${USERS.filter(u=>k==='todos'||(k==='online'&&u.online)||(k==='cortesia'&&u.cortesia)||(k==='bloqueado'&&u.bloqueado)||(k==='pendente'&&!u.confirmado)).length})</button>`).join('')}</div>
+    <p class="legend" style="margin:0">Toque em uma pessoa para ver os detalhes e as ações. Bolinhas: verde online, amarela cortesia, vermelha bloqueado, laranja e-mail não confirmado.</p>
     ${lista.length?lista.map(cartao).join(''):'<p class="empty">Nenhum usuário encontrado.</p>'}
   </div>`;
   const qi=$('ad-q');qi.oninput=()=>{busca=qi.value;const pos=qi.selectionStart;usuarios();const n=$('ad-q');n.focus();try{n.setSelectionRange(pos,pos)}catch(e){}};
@@ -331,21 +353,25 @@ function cartao(u){
       :`<button type="button" class="ghost" data-act="dar-cortesia" data-email="${esc(u.email)}">Dar cortesia</button>`}
     <button type="button" class="ghost" data-act="${u.bloqueado?'desbloquear':'bloquear'}" data-id="${u.id}">${u.bloqueado?'Desbloquear':'Bloquear'}</button>
     <button type="button" class="danger" data-act="excluir" data-id="${u.id}">Excluir</button>`;
-  return `<div class="user" data-u="${u.id}">
-    <div class="hd2"><div class="av">${u.foto?`<img src="${esc(u.foto)}" alt="">`:ini}</div>
-      <div style="min-width:0"><div class="nm">${esc(u.nome||'(sem nome)')}</div><div class="em">${esc(u.email)}</div></div></div>
+  const pontos=[u.online&&'<i style="background:var(--go)" title="Online"></i>',u.cortesia&&'<i style="background:var(--sand)" title="Cortesia"></i>',
+    u.bloqueado&&'<i style="background:var(--stop)" title="Bloqueado"></i>',!u.confirmado&&'<i style="background:var(--warn)" title="E-mail não confirmado"></i>'].filter(Boolean).join('');
+  return `<details class="user" data-sec="u-${u.id}"${ABERTAS.has('u-'+u.id)?' open':''} data-u="${u.id}">
+    <summary><div class="av">${u.foto?`<img src="${esc(u.foto)}" alt="">`:ini}</div>
+      <div style="min-width:0"><div class="nm">${esc(u.nome||'(sem nome)')}</div><div class="em">${esc(u.email)}</div></div>
+      <span class="mini">${pontos}<span class="chev" aria-hidden="true">▶</span></span></summary>
+    <div class="user-in">
     ${tags?`<div class="tags">${tags}</div>`:''}
     <div class="legend">${[u.funcao,u.barco&&'Barco '+u.barco].filter(Boolean).map(esc).join(' · ')||'—'}</div>
     <div class="legend">Conta criada ${quando(u.criado)} · último uso ${quando(u.visto||u.ultimo_login)}</div>
     ${acts?`<div class="acts">${acts}</div>`:''}
     <div class="extra"></div>
-  </div>`;
+  </div></details>`;
 }
 async function acao(b){
   const a=b.dataset.act,id=b.dataset.id,email=b.dataset.email;
   try{
     if(a==='dar-cortesia'){
-      const box=b.closest('.user').querySelector('.extra');
+      const box=b.closest('details.user').querySelector('.extra');
       box.innerHTML=`<div class="inline"><label class="f">Cortesia até (deixe vazio para sem prazo)<input type="date" class="ct-ate"></label><button type="button" class="ct-ok">Dar</button></div>`;
       box.querySelector('.ct-ok').onclick=async()=>{const ate=box.querySelector('.ct-ate').value||null;
         const {error}=await sb.rpc('admin_cortesia_salvar',{e_mail:email,valida_ate:ate,observacao:'Dada pela lista de usuários'});if(error)return msg(erroTxt(error));
@@ -368,14 +394,14 @@ async function acao(b){
 /* ---------- cortesias ---------- */
 function cortesias(lista){
   $('ad-body').innerHTML=`<div style="display:grid;gap:14px">
-    <div class="panel"><h2 style="font-size:1.3rem">Dar cortesia</h2>
+    ${sec('dar-cortesia','+ Dar cortesia','Por e-mail, com ou sem prazo',`
       <p class="legend" style="margin:0">Vale para o e-mail mesmo que a pessoa ainda não tenha conta. Quando ela se cadastrar com esse e-mail, já entra com a cortesia.</p>
       <form id="ct-form" style="display:grid;gap:10px" novalidate>
         <label class="f">E-mail<input type="email" id="ct-email" required placeholder="nome@exemplo.com" inputmode="email"></label>
         <label class="f">Válida até (vazio = sem prazo)<input type="date" id="ct-ate"></label>
         <label class="f">Observação (opcional)<input type="text" id="ct-nota" maxlength="200" placeholder="Ex.: parceiro, barqueiro do cais"></label>
         <button type="submit">Salvar cortesia</button>
-      </form></div>
+      </form>`)}
     <div class="panel"><h2 style="font-size:1.3rem">Cortesias (${lista.length})</h2>
       ${lista.length?lista.map(c=>`<div class="user"><div style="display:grid;gap:4px">
           <div class="nm">${esc(c.email)}</div>
