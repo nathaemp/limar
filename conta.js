@@ -7,7 +7,7 @@
 const CFG={
   url:'https://gmqkbxxwutgntrnrqwjm.supabase.co',
   key:'sb_publishable_Tf3vFF5ygNld9fWY8dP2rQ_dYnb7iV5',   // chave pública: pode ficar no app
-  turnstile:''     // site key do Cloudflare Turnstile (captcha), quando ativado
+  turnstile:'0x4AAAAAAFofzAxl0TAYQd0a'   // site key pública do Cloudflare Turnstile (captcha)
 };
 const $=id=>document.getElementById(id);
 const html=document.documentElement;
@@ -122,13 +122,14 @@ const VIEWS={
   confirme:{html:()=>`<h2>Confirme seu e-mail</h2>
     <p class="msg info">Mandamos um link para <b>${esc(lastEmail)}</b>. Abra a mensagem e toque em <b>Confirmar e-mail</b>. Se não achar, olhe no Spam ou em Promoções.</p>
     <p class="hint" style="margin:0">Depois de confirmar, volte aqui e entre com seu e-mail e senha.</p>
-    <span id="a-msg"></span>
+    <div class="cf-turnstile"></div><span id="a-msg"></span>
     <button type="button" id="a-reenv" class="ghost">Reenviar e-mail</button>
     <button type="button" data-go="entrar">Já confirmei, entrar</button>`,
     wire(){let wait=0,tm=null;const b=$('a-reenv');
       const tick=()=>{if(wait>0){b.disabled=true;b.textContent='Reenviar em '+wait+' s';wait--;tm=setTimeout(tick,1000)}else{b.disabled=false;b.textContent='Reenviar e-mail'}};
       b.onclick=async()=>{if(!lastEmail){go('entrar');return}
-        const {error}=await sb.auth.resend({type:'signup',email:lastEmail,options:{emailRedirectTo:REDIRECT}});
+        const tk=captchaToken();if(tk===null){$('a-msg').innerHTML=msgBox(traduz('captcha'));return}
+        const {error}=await sb.auth.resend({type:'signup',email:lastEmail,options:{emailRedirectTo:REDIRECT,captchaToken:tk}});captchaReset();
         $('a-msg').innerHTML=error?msgBox(traduz(error)):msgBox('E-mail reenviado.','ok');wait=60;tick()};
     }},
   esqueci:{html:()=>`<h2>Recuperar senha</h2>
