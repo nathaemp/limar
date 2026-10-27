@@ -134,10 +134,52 @@ function painel(d){
       <div class="panel"><h2 style="font-size:1.15rem">Abas mais usadas</h2>${rank(d.top_abas,'Ainda sem dados.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
       <div class="panel"><h2 style="font-size:1.15rem">Ilhas e praias mais vistas</h2>${rank(d.top_lugares,'Ainda sem dados.')}<p class="legend" style="margin:0">Últimos 30 dias</p></div>
     </div>
+    <div class="panel" id="ad-po"><h2 style="font-size:1.3rem">Avisos com som (Pushover)</h2><p class="empty">Carregando…</p></div>
     <div class="panel" id="ad-ntfy"><h2 style="font-size:1.3rem">Avisos no celular</h2><p class="empty">Carregando…</p></div>
     <p class="legend" style="margin:0">Atualizado ${quando(d.agora)}. Seus próprios cliques dentro da administração não entram na conta.</p>
   </div>`;
-  avisos();
+  avisos();pushover();
+}
+
+/* ---------- avisos com som (Pushover) ---------- */
+const SONS=[['pushover','Pushover (padrão)'],['tugboat','Rebocador (buzina de barco)'],['cashregister','Caixa registradora'],['magic','Mágica'],['bugle','Corneta'],
+  ['bike','Campainha de bicicleta'],['incoming','Chegando'],['intermission','Intervalo'],['classical','Clássico'],['cosmic','Cósmico'],['falling','Caindo'],
+  ['gamelan','Gamelão'],['mechanical','Mecânico'],['pianobar','Piano bar'],['siren','Sirene'],['spacealarm','Alarme espacial'],['alien','Alien (longo)'],
+  ['climb','Subida (longo)'],['persistent','Persistente (longo)'],['echo','Eco (longo)'],['updown','Sobe e desce (longo)'],['vibrate','Só vibrar'],['none','Sem som']];
+const TIPOS=[['cadastro','Cadastro novo','tugboat'],['confirmado','E-mail confirmado','magic']];
+let poInfo=null,poSons={};
+async function pushover(){
+  const box=$('ad-po');if(!box)return;
+  if(!poInfo){try{const {data,error}=await sb.rpc('admin_pushover');if(error)throw error;poInfo=data;
+      poSons=Object.fromEntries(TIPOS.map(([k,,d])=>[k,(data.sons||{})[k]||d]))}
+    catch(e){box.innerHTML='<h2 style="font-size:1.3rem">Avisos com som (Pushover)</h2><p class="empty">'+esc(erroTxt(e))+'</p>';return}}
+  const on=poInfo.configurado;
+  box.innerHTML=`<h2 style="font-size:1.3rem">Avisos com som (Pushover)</h2>
+    <p class="legend" style="margin:0">${on?'Ligado. Escolha o som de cada aviso e toque em <b>Testar</b> para ouvir no celular.'
+      :'Instale o app <b>Pushover</b> e crie a conta. No site <b>pushover.net</b>, copie a sua <b>User Key</b> e crie um aplicativo (<i>Create an Application</i>) para pegar a <b>API Token</b>. Cole as duas aqui.'}</p>
+    <div class="cols" style="gap:8px">
+      <label class="f">User Key<input type="password" id="po-u" autocomplete="off" placeholder="${on?'(salva)':'cole aqui'}"></label>
+      <label class="f">API Token<input type="password" id="po-t" autocomplete="off" placeholder="${on?'(salva)':'cole aqui'}"></label></div>
+    ${TIPOS.map(([k,l])=>`<div class="inline" style="grid-template-columns:1fr auto auto;align-items:center"><span>${l}</span>
+      <select class="sel" data-som="${k}" aria-label="Som para ${l}" style="padding:8px">${SONS.map(([v,n])=>`<option value="${v}" ${poSons[k]===v?'selected':''}>${n}</option>`).join('')}</select>
+      <button type="button" class="ghost" data-teste="${k}" style="padding:8px 12px">Testar</button></div>`).join('')}
+    <div class="acts"><button type="button" id="po-salvar">${on?'Salvar sons':'Ligar Pushover'}</button>${on?'<button type="button" class="ghost" id="po-off">Desligar</button>':''}</div>`;
+  box.querySelectorAll('[data-som]').forEach(sl=>sl.onchange=()=>{poSons[sl.dataset.som]=sl.value});
+  const salvar=async teste=>{
+    const u=$('po-u').value.trim(),t=$('po-t').value.trim();
+    const {data:envio,error}=await sb.rpc('admin_pushover_salvar',{usuario:u||null,token:t||null,sons:poSons,teste,desligar:false});
+    if(error)return msg(erroTxt(error));
+    poInfo=null;msg('Enviando o teste…','ok');
+    // espera o Pushover responder
+    for(let i=0;i<8;i++){await new Promise(r=>setTimeout(r,1000));
+      const {data:r}=await sb.rpc('admin_pushover_resultado',{envio});
+      if(r&&r.status){if(r.status===200)msg('Teste enviado: deve tocar no celular agora.','ok');
+        else msg('O Pushover recusou ('+r.status+'). Confira a User Key e a API Token. '+(r.erro||''));break}}
+    pushover()};
+  box.querySelectorAll('[data-teste]').forEach(b=>b.onclick=()=>salvar(b.dataset.teste));
+  $('po-salvar').onclick=()=>salvar('cadastro');
+  if($('po-off'))$('po-off').onclick=async()=>{const {error}=await sb.rpc('admin_pushover_salvar',{usuario:null,token:null,sons:null,teste:null,desligar:true});
+    if(error)return msg(erroTxt(error));poInfo=null;msg('Pushover desligado.','ok');pushover()};
 }
 
 /* ---------- avisos no celular (app ntfy) ---------- */
