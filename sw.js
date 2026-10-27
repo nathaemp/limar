@@ -1,7 +1,7 @@
 // Limamar: guarda o app e a carta no celular para abrir sem sinal.
-const SHELL_CACHE = 'limar-v4';
+const SHELL_CACHE = 'limar-v5';
 const CARTA_CACHE = 'limar-cartas-v1';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'cartas/cartas.json'];
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'cartas/cartas.json', 'conta.js', 'conta.css'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SHELL_CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -39,8 +39,8 @@ self.addEventListener('fetch', e => {
     );
     return;
   }
-  // Fontes do Google: cópia salva primeiro
-  if (url.hostname.includes('fonts.g')) {
+  // Fontes do Google e biblioteca de contas (versão fixa): cópia salva primeiro
+  if (url.hostname.includes('fonts.g') || (url.hostname === 'cdn.jsdelivr.net' && url.pathname.includes('@supabase/supabase-js@'))) {
     e.respondWith(caches.match(req).then(r => r || fetch(req).then(res => {
       const copy = res.clone();
       caches.open(SHELL_CACHE).then(c => c.put(req, copy));

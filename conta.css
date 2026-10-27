@@ -1,0 +1,38 @@
+/* Conta do usuário: entrada, cadastro e perfil */
+html.locked .wrap, html.locked nav.tabs{visibility:hidden}
+html.locked body{overflow:hidden}
+.auth{position:fixed;inset:0;z-index:50;background:var(--bg,#eef2f1);overflow:auto;-webkit-overflow-scrolling:touch}
+.auth .box{max-width:420px;margin:0 auto;padding:calc(28px + env(safe-area-inset-top,0px)) max(20px,env(safe-area-inset-left,0px)) calc(28px + env(safe-area-inset-bottom,0px));display:grid;gap:16px}
+.auth .brand{display:grid;gap:4px;margin-bottom:6px}
+.auth .brand h1{font-family:var(--display);font-size:2.6rem;line-height:1;margin:0}
+.auth .brand p{margin:0;color:var(--muted)}
+.auth h2{font-size:1.6rem}
+.auth form{display:grid;gap:12px}
+.auth .f input{font:inherit;font-size:1rem}
+.auth input[type=email],.auth input[type=password],.auth input[type=text],.conta input[type=text],.conta input[type=password]{font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;width:100%;min-width:0}
+.auth .links{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.92rem}
+.auth .links button,.linkbtn{background:none;border:0;padding:4px 0;color:var(--bay);font-weight:700;text-decoration:underline;text-underline-offset:3px;border-radius:4px}
+.auth .msg,.conta .msg{font-size:.9rem;border-radius:10px;padding:10px 12px;margin:0}
+.auth .msg.err,.conta .msg.err{background:var(--stop-bg);color:var(--stop)}
+.auth .msg.ok,.conta .msg.ok{background:var(--go-bg);color:var(--go)}
+.auth .msg.info{background:var(--bay-soft);color:var(--ink)}
+.auth .hint{font-size:.8rem;color:var(--muted)}
+.auth .pw{position:relative}
+.auth .pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:6px 8px;font-size:.78rem;border-radius:8px;border-width:1px;background:transparent;color:var(--bay)}
+.auth .pw input{padding-right:64px}
+.auth .chk{display:flex;gap:10px;align-items:flex-start;font-size:.88rem;color:var(--muted)}
+.auth .chk input{width:20px;height:20px;accent-color:var(--bay);flex:none;margin-top:1px}
+.cf-turnstile{min-height:65px}
+.acct-btn{width:34px;height:34px;padding:0;border-radius:50%;border:2px solid var(--bay);background:var(--bay-soft);color:var(--bay);font-family:var(--display);font-size:1rem;font-weight:700;overflow:hidden;display:grid;place-items:center}
+.acct-btn img,.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar{width:96px;height:96px;border-radius:50%;background:var(--bay-soft);color:var(--bay);display:grid;place-items:center;font-family:var(--display);font-size:2.4rem;font-weight:700;overflow:hidden;border:3px solid var(--surface);box-shadow:0 0 0 2px var(--bay)}
+.conta .me{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center}
+.conta .me .email{color:var(--muted);font-size:.9rem;overflow-wrap:anywhere}
+.conta form{display:grid;gap:12px}
+.conta .danger{border-color:var(--stop);background:transparent;color:var(--stop)}
+.conta .danger.solid{background:var(--stop);color:#fff}
+.conta .plan{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.conta hr{border:0;border-top:1px solid var(--line);margin:4px 0;width:100%}
+select.sel{font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px;width:100%}
+.conta .panel{gap:10px}
+[hidden]{display:none!important}

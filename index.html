@@ -14,6 +14,8 @@
 <link rel="icon" href="icons/icon-192.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<script>var LM_AUTH=false;/* liga quando o servidor de contas estiver pronto */if(LM_AUTH){try{if(!localStorage.getItem('lm-ok'))document.documentElement.classList.add('locked')}catch(e){document.documentElement.classList.add('locked')}}</script>
+<link rel="stylesheet" href="conta.css">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* Layout: app de convés, uma coluna, abas fixas embaixo; alto contraste para ler sob sol */
@@ -244,7 +246,10 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
       <h1>Limamar</h1>
     </div>
     <div class="top-right">
-      <span class="status" id="status">Carregando…</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <span class="status" id="status">Carregando…</span>
+        <button type="button" class="acct-btn" id="acct-btn" aria-label="Minha conta" hidden></button>
+      </div>
       <button type="button" class="ghost share" id="share-app" aria-label="Compartilhar o Limamar">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
         Compartilhar
@@ -406,6 +411,8 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
 </div>
 
 <dialog class="sheet" id="sheet" aria-labelledby="pl-name"><div class="in" id="sheet-in"></div></dialog>
+<div id="auth" class="auth" hidden></div>
+<dialog id="conta" class="sheet conta" aria-labelledby="ct-title"><div class="in" id="conta-in"></div></dialog>
 
 <nav class="tabs" role="tablist" aria-label="Seções">
   <button class="tab" role="tab" data-v="hoje" aria-selected="true">Hoje</button>
@@ -598,12 +605,14 @@ const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 /* ---------- Norte / Sul ---------- */
 let LAST=null, REG=store.get('np-reg','norte');
 const openZones=new Set();
-document.querySelectorAll('[data-reg]').forEach(b=>b.onclick=()=>{REG=b.dataset.reg;store.set('np-reg',REG);renderZones()});
+// tocar de novo na região aberta recolhe a lista
+document.querySelectorAll('[data-reg]').forEach(b=>b.onclick=()=>{REG=REG===b.dataset.reg?null:b.dataset.reg;store.set('np-reg',REG);renderZones()});
 function zoneRes(z){return LAST&&LAST.results.find(r=>r.id===z.id)}
 function renderZones(){
   document.querySelectorAll('[data-reg]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.reg===REG));
-  $('reg-desc').textContent=REGS[REG];
-  if(!LAST){return}
+  $('reg-desc').textContent=REG?REGS[REG]:'Toque em Norte ou Sul para ver as ilhas e praias.';
+  if(!REG){$('zones').innerHTML='';return}
+  if(!LAST){$('zones').innerHTML='<p class="legend">Buscando previsão…</p>';return}
   const list=LAST.results.filter(z=>z.reg===REG);
   $('zones').innerHTML=list.map(z=>{
     const why=z.missing?'Sem previsão para esta área agora':z.why.length?cap(z.why.join(', '))+(z.s!=='go'&&z.gust>=RULE.gustWarn?' perto das '+hhmm(z.gustAt):''):(z.note||(z.open?'Mais exposta ao vento e ao mar':'Abrigada'));
@@ -615,7 +624,11 @@ function renderZones(){
       </summary>
       <div class="places">${PLACES.filter(p=>p.z.id===z.id).map(p=>`<button type="button" class="place" data-p="${p.id}"><small>${kind(p.n)}</small>${esc(p.n)}</button>`).join('')}</div>
     </details>`}).join('');
-  $('zones').querySelectorAll('details').forEach(el=>el.addEventListener('toggle',()=>{el.open?openZones.add(el.dataset.z):openZones.delete(el.dataset.z)}));
+  // uma área aberta por vez; tocar de novo no título recolhe
+  $('zones').querySelectorAll('details').forEach(el=>el.addEventListener('toggle',()=>{
+    if(el.open){openZones.clear();openZones.add(el.dataset.z);
+      $('zones').querySelectorAll('details[open]').forEach(o=>{if(o!==el)o.open=false})}
+    else openZones.delete(el.dataset.z)}));
   $('zones').querySelectorAll('.place').forEach(b=>b.onclick=()=>openPlace(b.dataset.p));
 }
 renderZones();
@@ -1067,9 +1080,12 @@ load(false);
 setInterval(()=>{if(document.visibilityState==='visible')load(false)},10*60*1000);
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load(false)});
 
+window.LM_OPEN_TAB=show;
 if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(r=>r.update()).catch(()=>{}));
 // quando sair versão nova do app, recarrega uma vez sozinho
 if('serviceWorker' in navigator&&navigator.serviceWorker.controller){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()})}
 </script>
+<script>if(LM_AUTH)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"><\/script>')</script>
+<script src="conta.js"></script>
 </body>
 </html>
