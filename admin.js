@@ -315,7 +315,7 @@ const d = await carrega();
 const fam = config.widgetFamily || "medium";
 const w = new ListWidget();
 w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000);
-w.url = "https://nathaemp.github.io/limar/";
+w.url = "https://nathaemp.github.io/paratywaters/";
 
 if (!d) {
   w.addText("Paraty Waters: sem dados");
