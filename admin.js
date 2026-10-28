@@ -166,11 +166,54 @@ function painel(d){
       </ol>
       <p class="legend" style="margin:0">Não compartilhe o script: ele leva a chave secreta dos números. Se ele vazar, toque em <button type="button" class="linkbtn" id="wg-nova">trocar a chave</button> (o widget antigo para de funcionar e você copia o script de novo).</p>
     </div>`)}
+    ${sec('qrcode','QR Code do app','Mostrar na tela, baixar ou compartilhar','<div id="ad-qr" style="display:grid;gap:12px"><p class="empty">Carregando…</p></div>')}
     ${sec('pushover','Avisos com som (Pushover)','Som para cada tipo de aviso','<div id="ad-po" style="display:grid;gap:10px"><p class="empty">Carregando…</p></div>')}
     ${sec('ntfy','Avisos no app ntfy','Aviso simples, sem escolher som','<div id="ad-ntfy" style="display:grid;gap:10px"><p class="empty">Carregando…</p></div>')}
     <p class="legend" style="margin:0">Atualizado ${quando(d.agora)}. Seus próprios cliques dentro da administração não entram na conta.</p>
   </div>`;
-  avisos();pushover();widget();
+  avisos();pushover();widget();qrcode();
+}
+
+/* ---------- QR Code do app ---------- */
+let qrLoad=null;
+const appUrl=()=>location.origin+location.pathname.replace(/index\.html$/,'');
+async function qrcode(){
+  const box=$('ad-qr');if(!box)return;
+  qrLoad=qrLoad||new Promise((ok,no)=>{if(window.LimaQR)return ok();const s=document.createElement('script');s.src='qr.js?v=1';s.onload=ok;s.onerror=()=>{qrLoad=null;no()};document.head.appendChild(s)});
+  try{await qrLoad}catch(e){box.innerHTML='<p class="empty">Não foi possível carregar o gerador de QR Code.</p>';return}
+  let url=appUrl();
+  const src=()=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(window.LimaQR.qrSvg(url,{size:1024}));
+  box.innerHTML=`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
+      <button type="button" id="qr-big" aria-label="Mostrar em tela cheia" style="padding:8px;background:#fff;border-radius:16px;border:0"><img id="qr-img" alt="QR Code do Limamar" style="width:176px;height:176px;display:block"></button>
+      <div style="flex:1;min-width:200px;display:grid;gap:8px">
+        <label class="f">Link do QR Code<input type="url" id="qr-url" value="${esc(url)}"></label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" id="qr-show">Mostrar na tela</button>
+          <button type="button" class="ghost" id="qr-dl">Baixar PNG</button>
+          <button type="button" class="ghost" id="qr-share">Compartilhar</button>
+        </div>
+      </div></div>
+    <p class="legend" style="margin:0">Mostre na tela para a pessoa apontar a câmera, ou baixe para imprimir e mandar no WhatsApp.</p>`;
+  const img=$('qr-img');const pinta=()=>{try{img.src=src()}catch(e){}};pinta();
+  $('qr-url').oninput=e=>{url=e.target.value.trim()||appUrl();pinta()};
+  async function png(){
+    const im=new Image();im.src=src();await im.decode();
+    const S=1200,pad=60,c=document.createElement('canvas');c.width=S;c.height=S+120;const g=c.getContext('2d');
+    g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.imageSmoothingEnabled=false;g.drawImage(im,pad,pad,S-pad*2,S-pad*2);
+    g.textAlign='center';g.fillStyle='#0d2a33';g.font='bold 52px system-ui,sans-serif';g.fillText('Limamar',S/2,S+40);
+    g.fillStyle='#557079';g.font='32px system-ui,sans-serif';g.fillText(url.replace(/^https?:\/\//,'').replace(/\/$/,''),S/2,S+90);
+    return new Promise(ok=>c.toBlob(ok,'image/png'));
+  }
+  const baixa=async()=>{const b=await png();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='qrcode-limamar.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
+  $('qr-dl').onclick=baixa;
+  $('qr-share').onclick=async()=>{const b=await png();const f=new File([b],'qrcode-limamar.png',{type:'image/png'});
+    try{if(navigator.canShare&&navigator.canShare({files:[f]}))return await navigator.share({files:[f],title:'Limamar',text:'Limamar: '+url});if(navigator.share)return await navigator.share({title:'Limamar',url})}catch(e){if(e&&e.name==='AbortError')return}
+    baixa()};
+  const tela=()=>{const d=document.createElement('div');d.setAttribute('role','dialog');d.setAttribute('aria-label','QR Code do Limamar');
+    d.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;color:#0d2a33;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px';
+    d.innerHTML=`<img src="${src()}" alt="" style="width:min(86vw,70vh)"><div style="text-align:center"><b style="font-size:1.6rem">Limamar</b><div style="opacity:.6;margin-top:4px">Aponte a câmera do celular</div></div><span style="position:absolute;top:max(16px,env(safe-area-inset-top));right:16px;font-size:2rem;line-height:1">×</span>`;
+    d.onclick=()=>d.remove();document.body.appendChild(d)};
+  $('qr-show').onclick=tela;$('qr-big').onclick=tela;
 }
 
 /* ---------- widget do iPhone (Scriptable) ---------- */
