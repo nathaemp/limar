@@ -178,7 +178,7 @@ function painel(d){
 
 
 /* ---------- pop-ups (Lima Acervo e Lima Hub) ---------- */
-const POP_DEF={acervo:{label:'Baixar no Lima Acervo',url:'https://limaacervo.lovable.app/assinatura'},hub:{label:'Abrir o Lima Hub',url:'https://limahubparaty.lovable.app'}};
+const POP_DEF={acervo:{label:'Baixar no Lima Acervo',url:'https://www.limafilmsparaty.com/'},hub:{label:'Abrir o Lima Hub',url:'https://limahubparaty.com/'}};
 async function popupsAdm(){
   const [p,c]=await Promise.all([sb.from('popups').select('*').order('kind').order('position'),sb.from('popup_settings').select('*').eq('id',1).maybeSingle()]);
   if(p.error){$('ad-body').innerHTML=`<div class="panel"><p class="empty">Os pop-ups ainda não foram ativados no banco de dados. Rode o arquivo <b>supabase/popups.sql</b> no Supabase (SQL Editor) uma vez.</p></div>`;return}

@@ -54,8 +54,8 @@ create policy "popups: admin apaga" on storage.objects for delete to authenticat
 
 -- Pop-ups iniciais (sem vídeo; troque/adicione vídeos pela administração)
 insert into public.popups (kind, title, body, cta_label, cta_url, position)
-select 'acervo', 'Imagens profissionais de Paraty', 'Fotos e vídeos da baía, ilhas e centro histórico para divulgar o seu passeio.', 'Baixar no Lima Acervo', 'https://limaacervo.lovable.app/assinatura', 1
+select 'acervo', 'Imagens profissionais de Paraty', 'Fotos e vídeos da baía, ilhas e centro histórico para divulgar o seu passeio.', 'Baixar no Lima Acervo', 'https://www.limafilmsparaty.com/', 1
 where not exists (select 1 from public.popups where kind = 'acervo');
 insert into public.popups (kind, title, body, cta_label, cta_url, position)
-select 'hub', 'Profissionais de Paraty, a um toque de você', 'Mecânico de barco, marinheiro, eletricista, faxina: encontre no Lima Hub.', 'Abrir o Lima Hub', 'https://limahubparaty.lovable.app', 1
+select 'hub', 'Profissionais de Paraty, a um toque de você', 'Mecânico de barco, marinheiro, eletricista, faxina: encontre no Lima Hub.', 'Abrir o Lima Hub', 'https://limahubparaty.com/', 1
 where not exists (select 1 from public.popups where kind = 'hub');
