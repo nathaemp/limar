@@ -302,7 +302,7 @@ function drawAdminBtn(){
 }
 let adminLoad=null;
 function abreAdmin(){
-  adminLoad=adminLoad||new Promise((ok,no)=>{const s=document.createElement('script');s.src='admin.js?v=14';s.onload=ok;s.onerror=()=>{adminLoad=null;no()};document.head.appendChild(s)});
+  adminLoad=adminLoad||new Promise((ok,no)=>{const s=document.createElement('script');s.src='admin.js?v=15';s.onload=ok;s.onerror=()=>{adminLoad=null;no()};document.head.appendChild(s)});
   adminLoad.then(()=>window.LM_ADMIN&&window.LM_ADMIN.abrir()).catch(()=>flashMsg('Sem internet para abrir a administração.'));
 }
 

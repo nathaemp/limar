@@ -1,7 +1,7 @@
 /* Paraty Waters · pop-ups do Lima Acervo e do Lima Hub.
    Ao entrar no app (logo depois do login ou ao abrir o app já logado), mostra todos os
    pop-ups ativos, um depois do outro: só dá para usar o app depois de fechar todos.
-   A partir daí, alterna um de cada a cada X minutos de uso (definido no admin),
+   A partir daí, a cada X minutos de uso (definido no admin) mostra de novo todos os ligados,
    nunca durante uma viagem no velocímetro nem com outra janela aberta. */
 (function(){
 'use strict';
@@ -102,10 +102,16 @@ function entryTick(){
   if(!items.enabled||!items.list.length){if(loaded)entryDone=true;return}
   if(!canEnter())return;
   entryRunning=true;
-  const fila=['acervo','hub'].flatMap(k=>items.list.filter(x=>x.kind===k));
+  sequencia(()=>{entryRunning=false;entryDone=true});
+}
+/* mostra um de cada tipo ligado (Acervo e depois Hub), um depois do outro; a pessoa fecha todos */
+let seqRunning=false;
+function sequencia(fim){
+  seqRunning=true;
+  const fila=['acervo','hub'].map(k=>{const l=items.list.filter(x=>x.kind===k);if(!l.length)return null;const i=(st.idx[k]||0)%l.length;st.idx[k]=i+1;return l[i]}).filter(Boolean);
   const proximo=()=>{
     const it=fila.shift();
-    if(!it){entryRunning=false;entryDone=true;st.lastShown=Date.now();ls.set(KEY,st);usedMs=0;shownThisSession=true;return}
+    if(!it){seqRunning=false;st.lastShown=Date.now();ls.set(KEY,st);usedMs=0;shownThisSession=true;if(fim)fim();return}
     show(it,proximo);
   };
   proximo();
@@ -122,7 +128,7 @@ function tick(){
   const need=shownThisSession?every:FIRST_DELAY;
   const sinceLast=st.lastShown?now-st.lastShown:Infinity;
   const ready=usedMs>=need&&sinceLast>=every;
-  if(ready&&!busy()){const it=next();if(it)show(it)}
+  if(ready&&!seqRunning&&!busy())sequencia();   // a cada intervalo: todos os ligados, um depois do outro
 }
 let started=false;
 function start(){if(started)return;started=true;
