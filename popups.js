@@ -1,6 +1,8 @@
 /* Paraty Waters · pop-ups do Lima Acervo e do Lima Hub.
-   Alterna um de cada a cada X minutos de uso (padrão 15), nunca durante uma viagem
-   no velocímetro, nem com outra janela aberta, nem no primeiro minuto. */
+   Ao entrar no app (logo depois do login ou ao abrir o app já logado), mostra todos os
+   pop-ups ativos, um depois do outro: só dá para usar o app depois de fechar todos.
+   A partir daí, alterna um de cada a cada X minutos de uso (definido no admin),
+   nunca durante uma viagem no velocímetro nem com outra janela aberta. */
 (function(){
 'use strict';
 const KEY='pw-pop',CACHE='pw-pop-cache',FIRST_DELAY=3*60e3;
@@ -64,7 +66,7 @@ function next(){
   return null;
 }
 
-function show(it){
+function show(it,onClose){
   const track=(t)=>{try{window.LM_TRACK&&window.LM_TRACK('clique','popup-'+it.kind+'-'+t)}catch(e){}};
   const d=document.createElement('div');d.id='pw-pop';d.setAttribute('role','dialog');d.setAttribute('aria-label',it.title||'Novidade');
   const label=it.cta_label||(it.kind==='acervo'?'Baixar no Lima Acervo':'Abrir o Lima Hub');
@@ -75,7 +77,7 @@ function show(it){
     <div class="tx">${it.title?`<h3>${esc(it.title)}</h3>`:''}${it.body?`<p>${esc(it.body)}</p>`:''}
     <a class="go" href="${esc(it.cta_url||'#')}" target="_blank" rel="noopener">${it.kind==='acervo'?'⬇ ':''}${esc(label)}</a>
     <button type="button" class="later">Agora não</button></div></div>`;
-  const close=()=>{d.remove()};
+  const close=()=>{if(!d.isConnected)return;d.remove();if(onClose)onClose()};
   d.addEventListener('click',e=>{if(e.target===d)close()});
   d.querySelector('.x').onclick=()=>{track('fechar');close()};
   d.querySelector('.later').onclick=()=>{track('fechar');close()};
@@ -85,7 +87,32 @@ function show(it){
   st.lastShown=Date.now();ls.set(KEY,st);usedMs=0;shownThisSession=true;
 }
 
+/* ---------- ao entrar no app: todos os pop-ups ativos, em sequência ---------- */
+let entryDone=false,entryRunning=false,loaded=false;
+function canEnter(){
+  if(document.visibilityState!=='visible')return false;
+  if(document.documentElement.classList.contains('locked'))return false;   // ainda na tela de entrar
+  if(document.getElementById('pw-pop')||document.getElementById('splash'))return false;  // vinheta de abertura
+  const adm=document.getElementById('admin');if(adm&&!adm.hidden)return false;
+  return true;
+}
+function entryTick(){
+  if(entryDone||entryRunning)return;
+  if(!loaded&&!items.list.length)return;            // espera a lista chegar
+  if(!items.enabled||!items.list.length){if(loaded)entryDone=true;return}
+  if(!canEnter())return;
+  entryRunning=true;
+  const fila=['acervo','hub'].flatMap(k=>items.list.filter(x=>x.kind===k));
+  const proximo=()=>{
+    const it=fila.shift();
+    if(!it){entryRunning=false;entryDone=true;st.lastShown=Date.now();ls.set(KEY,st);usedMs=0;shownThisSession=true;return}
+    show(it,proximo);
+  };
+  proximo();
+}
+
 function tick(){
+  if(!entryDone)return;                              // os minutos só contam depois dos pop-ups de entrada
   const now=Date.now(),dt=Math.min(now-lastTick,5e3);lastTick=now;
   if(document.visibilityState==='visible')usedMs+=dt;
   if(!items.enabled||!items.list.length)return;
@@ -98,7 +125,10 @@ function tick(){
   if(ready&&!busy()){const it=next();if(it)show(it)}
 }
 let started=false;
-function start(){if(started)return;started=true;load();setInterval(tick,5e3);setInterval(load,30*60e3)}
+function start(){if(started)return;started=true;
+  load().finally(()=>{loaded=true;entryTick()});
+  const ent=setInterval(()=>{entryTick();if(entryDone)clearInterval(ent)},700);
+  setInterval(tick,5e3);setInterval(load,30*60e3)}
 if(window.LM_SB)start();else window.addEventListener('load',()=>setTimeout(start,500));
 window.PW_POPUP_TEST=()=>{const it=next();if(it)show(it)};
 window.PW_POPUP_SHOW=(it)=>show({...it,video:it.video_path?pub(it.video_path):null,poster:it.poster_path?pub(it.poster_path):null});

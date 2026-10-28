@@ -209,7 +209,7 @@ async function popupsAdm(){
   $('ad-body').innerHTML=`<div style="display:grid;gap:12px">
     <div class="panel" style="display:grid;gap:10px">
       <h2 style="font-size:1.3rem">Pop-ups no app</h2>
-      <p class="legend" style="margin:0">Alterna um do Lima Acervo e um do Lima Hub. O primeiro aparece depois de 3 minutos de uso e depois a cada intervalo abaixo. Nunca aparece durante uma viagem no velocímetro. No pop-up do Acervo, o botão leva para a assinatura.</p>
+      <p class="legend" style="margin:0">Ao entrar no app (logo depois do login ou ao abrir já logado), aparecem todos os pop-ups ligados, um depois do outro: a pessoa só usa o app depois de fechar todos. A partir daí, alterna um do Lima Acervo e um do Lima Hub a cada intervalo abaixo. Nunca aparece durante uma viagem no velocímetro. No pop-up do Acervo, o botão leva para a assinatura.</p>
       <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
         <label class="f" style="max-width:170px">A cada (minutos)<input type="number" id="pp-every" min="1" max="240" value="${cfg.every_minutes}"></label>
         <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="pp-enabled" ${cfg.enabled?'checked':''}> Pop-ups ligados</label>
