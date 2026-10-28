@@ -8,7 +8,7 @@ URL = "https://www.marinha.mil.br/chm/dados-do-smm-avisos-de-mau-tempo/avisos-de
 OUT = sys.argv[1] if len(sys.argv) > 1 else "avisos.json"
 
 req = urllib.request.Request(URL, headers={
-    "User-Agent": "Mozilla/5.0 (Limamar; +https://nathaemp.github.io/limar/)",
+    "User-Agent": "Mozilla/5.0 (Paraty Waters; +https://nathaemp.github.io/paratywaters/)",
     "Accept-Language": "pt-BR,pt;q=0.9"})
 raw = urllib.request.urlopen(req, timeout=60).read().decode("utf-8", "replace")
 
