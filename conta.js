@@ -1,4 +1,4 @@
-/* Limamar · conta do usuário (Supabase Auth)
+/* Paraty Waters · conta do usuário (Supabase Auth)
    Entrar, criar conta com confirmação por e-mail, recuperar senha, concluir cadastro,
    foto de perfil, trocar senha, sair e excluir conta. Depois de entrar uma vez, o app
    abre sem internet (no mar) com a sessão salva no celular. */
@@ -44,7 +44,7 @@ function captchaReset(){try{if(CFG.turnstile&&tsWidget!=null)window.turnstile.re
 function traduz(e){
   const m=(e&&(e.message||e.error_description||e))+'';
   if(/Invalid login credentials/i.test(m))return 'E-mail ou senha incorretos.';
-  if(/banned/i.test(m))return 'Esta conta está bloqueada. Fale com o Limamar pelo WhatsApp.';
+  if(/banned/i.test(m))return 'Esta conta está bloqueada. Fale com o Paraty Waters pelo WhatsApp.';
   if(/Email not confirmed/i.test(m))return 'Você ainda não confirmou seu e-mail. Abra a mensagem que mandamos e toque no link.';
   if(/User already registered/i.test(m))return 'Esse e-mail já tem conta. Entre ou recupere a senha.';
   if(/Password should be at least|weak/i.test(m))return 'Senha fraca. Use pelo menos 8 caracteres, com letras e números.';
@@ -62,7 +62,7 @@ const senhaOk=p=>p.length>=8&&/[A-Za-z]/.test(p)&&/\d/.test(p);
 function busy(form,on,label){const b=form.querySelector('button[type=submit]');if(!b)return;if(on){b.dataset.t=b.textContent;b.textContent=label||'Aguarde…'}else b.textContent=b.dataset.t||b.textContent;b.disabled=on}
 
 /* ---------- telas de entrada ---------- */
-const brand=`<div class="brand"><div class="eyebrow">Navegação em Paraty</div><h1>Limamar</h1><p>Vento, mar, maré e carta náutica da baía de Paraty.</p></div>`;
+const brand=`<div class="brand"><div class="eyebrow">Navegação em Paraty</div><h1>Paraty Waters</h1><p>Vento, mar, maré e carta náutica da baía de Paraty.</p></div>`;
 let lastEmail='';
 function go(view,msg){
   tsWidget=null;
@@ -100,7 +100,7 @@ const VIEWS={
       <label class="f">E-mail<input type="email" id="c-email" autocomplete="email" inputmode="email" required value="${esc(lastEmail)}"></label>
       ${pwField('c-senha','Senha','new-password','Pelo menos 8 caracteres, com letras e números.')}
       ${pwField('c-senha2','Repita a senha','new-password')}
-      <label class="chk"><input type="checkbox" id="c-ok" required><span>Entendo que o Limamar é uma ajuda para planejar e não substitui a carta oficial, os avisos da Marinha nem o julgamento do comandante.</span></label>
+      <label class="chk"><input type="checkbox" id="c-ok" required><span>Entendo que o Paraty Waters é uma ajuda para planejar e não substitui a carta oficial, os avisos da Marinha nem o julgamento do comandante.</span></label>
       <div class="cf-turnstile"></div><span id="a-msg"></span>
       <button type="submit">Criar conta</button>
     </form>
@@ -230,7 +230,7 @@ function abreConta(msg){
   const pl=PLANO||{plano:p.plano||'gratis',ate:p.plano_ate};
   const nomePlano={gratis:'Grátis',cortesia:'Cortesia'}[pl.plano]||cap1(pl.plano);
   const plano=esc(nomePlano)+(pl.ate&&pl.plano!=='gratis'?' · até '+new Date(String(pl.ate).slice(0,10)+'T12:00:00').toLocaleDateString('pt-BR'):pl.plano==='cortesia'?' · sem prazo':'');
-  $('conta-in').innerHTML=`<div class="hd"><div><div class="eyebrow">Limamar</div><h2 id="ct-title">Minha conta</h2></div><button type="button" class="ghost x" id="ct-x" aria-label="Fechar">×</button></div>
+  $('conta-in').innerHTML=`<div class="hd"><div><div class="eyebrow">Paraty Waters</div><h2 id="ct-title">Minha conta</h2></div><button type="button" class="ghost x" id="ct-x" aria-label="Fechar">×</button></div>
     ${msg?msgBox(msg.t,msg.c):''}
     ${online?'':msgBox('Sem internet: dá para ver a conta, mas mudanças só com sinal.','info')}
     <div class="me"><div class="avatar" id="ct-av">${avatarHTML()}</div>
@@ -254,7 +254,7 @@ function abreConta(msg){
       </form></div>
     <button type="button" class="ghost" id="ct-sair">Sair da conta</button>
     <div class="panel" style="border-color:var(--stop)"><h3 class="eyebrow" style="margin:0;color:var(--stop)">Excluir conta</h3>
-      <p class="legend" style="margin:0">Apaga sua conta, sua foto e seus dados do Limamar. Não dá para desfazer.</p>
+      <p class="legend" style="margin:0">Apaga sua conta, sua foto e seus dados do Paraty Waters. Não dá para desfazer.</p>
       <button type="button" class="danger" id="ct-excluir">Excluir minha conta</button>
       <div id="ct-exc2" hidden style="display:grid;gap:10px">
         <label class="f">Para confirmar, escreva EXCLUIR<input type="text" id="ct-conf" autocomplete="off" autocapitalize="characters"></label>
@@ -298,7 +298,7 @@ function drawAdminBtn(){
 }
 let adminLoad=null;
 function abreAdmin(){
-  adminLoad=adminLoad||new Promise((ok,no)=>{const s=document.createElement('script');s.src='admin.js?v=10';s.onload=ok;s.onerror=()=>{adminLoad=null;no()};document.head.appendChild(s)});
+  adminLoad=adminLoad||new Promise((ok,no)=>{const s=document.createElement('script');s.src='admin.js?v=11';s.onload=ok;s.onerror=()=>{adminLoad=null;no()};document.head.appendChild(s)});
   adminLoad.then(()=>window.LM_ADMIN&&window.LM_ADMIN.abrir()).catch(()=>flashMsg('Sem internet para abrir a administração.'));
 }
 

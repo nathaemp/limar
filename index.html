@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Limamar</title>
+<title>Paraty Waters</title>
 <meta name="description" content="Condições de navegação na baía de Paraty para barqueiros e marinheiros.">
 <meta name="theme-color" content="#0f5a6b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Limamar">
+<meta name="apple-mobile-web-app-title" content="Paraty Waters">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/favicon-32.png" sizes="32x32" type="image/png">
@@ -252,21 +252,58 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
 .tab{background:none;border:0;color:var(--muted);padding:12px 4px 14px;font-family:var(--display);font-size:1.1rem;font-weight:600;border-radius:0;border-top:3px solid transparent}
 .tab[aria-selected="true"]{color:var(--bay);border-top-color:var(--bay)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+
+/* Vinheta de abertura (leve: só CSS/SVG, ~5 s, um toque pula).
+   1) Paraty Waters aparece; 2) sobe e sai, revelando a Toulon que desce para o centro. */
+.splash{position:fixed;inset:0;z-index:10000;background:radial-gradient(120% 80% at 50% 30%,#0f5a6b 0%,#08171c 72%);overflow:hidden;animation:sp-out .55s ease-in 4.7s forwards;cursor:pointer}
+.splash .stage{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;text-align:center}
+.splash .one{animation:sp-leave .7s cubic-bezier(.6,0,.4,1) 2.3s forwards}
+.splash .two{opacity:0;transform:translateY(-70px);animation:sp-drop .9s cubic-bezier(.25,1.4,.45,1) 2.6s forwards}
+.splash .mark{width:112px;height:112px;filter:drop-shadow(0 10px 24px rgba(0,0,0,.4))}
+.splash .ring{stroke-dasharray:180;stroke-dashoffset:180;animation:sp-draw .9s cubic-bezier(.6,0,.2,1) .15s forwards}
+.splash .needle{transform-origin:50px 46px;animation:sp-spin 1.3s cubic-bezier(.2,.8,.2,1) .35s both}
+.splash .wave{stroke-dasharray:90;stroke-dashoffset:90;animation:sp-draw .8s ease-out .9s forwards}
+.splash .word{font:700 32px/1 system-ui,-apple-system,sans-serif;color:#fff;letter-spacing:-.01em;opacity:0;transform:translateY(10px);animation:sp-up .6s ease-out 1.1s forwards}
+.splash .word span{font-weight:500;color:#4fb3c6}
+.splash .tl{width:150px;height:150px;filter:drop-shadow(0 12px 28px rgba(0,0,0,.45))}
+.splash .credit{position:absolute;left:24px;right:24px;bottom:calc(26px + env(safe-area-inset-bottom,0px));text-align:center;font:300 .72rem/1.4 system-ui,sans-serif;letter-spacing:.04em;color:rgba(255,255,255,.62);opacity:0;animation:sp-fade .8s ease-out 2.9s forwards}
+.splash .shine{position:absolute;inset:-40%;background:linear-gradient(115deg,transparent 45%,rgba(255,255,255,.12) 50%,transparent 55%);transform:translateX(-60%);animation:sp-shine 1.4s ease-in-out 1.3s}
+.splash .skip{display:none}
+@keyframes sp-draw{to{stroke-dashoffset:0}}
+@keyframes sp-spin{from{transform:rotate(-200deg) scale(.4);opacity:0}to{transform:none;opacity:1}}
+@keyframes sp-up{to{opacity:1;transform:none}}
+@keyframes sp-leave{to{opacity:0;transform:translateY(-90px) scale(.9)}}
+@keyframes sp-drop{to{opacity:1;transform:none}}
+@keyframes sp-fade{to{opacity:1}}
+@keyframes sp-shine{to{transform:translateX(60%)}}
+@keyframes sp-out{to{opacity:0;visibility:hidden}}
+@media (prefers-reduced-motion:reduce){.splash,.splash *{animation-duration:.01s!important;animation-delay:0s!important}.splash .one{display:none}.splash{animation:sp-out .3s ease-in 2.4s forwards!important}}
 </style>
 </head>
 <body>
+<div class="splash" id="splash" role="img" aria-label="Paraty Waters. Esse aplicativo foi desenvolvido em parceria com a Toulon Náutica." hidden>
+  <div class="shine"></div>
+  <div class="stage one">
+    <svg class="mark" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="22" fill="#0f5a6b"/><circle class="ring" cx="50" cy="46" r="27" fill="none" stroke="#4fb3c6" stroke-width="3"/><g class="needle"><path d="M50 16 58 46 50 52 42 46Z" fill="#e9b949"/><path d="M50 76 58 46 50 40 42 46Z" fill="#fff"/><path d="M20 46 50 38 50 54Z" fill="#4fb3c6" opacity=".8"/><path d="M80 46 50 38 50 54Z" fill="#4fb3c6" opacity=".5"/></g><path class="wave" d="M12 84c9-6 16-6 25 0s16 6 25 0 16-6 26 0" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/></svg>
+    <div class="word">Paraty <span>Waters</span></div>
+  </div>
+  <div class="stage two"><img class="tl" src="icons/toulon.webp" alt="Toulon Náutica" width="150" height="150"></div>
+  <p class="credit">Esse aplicativo foi desenvolvido em parceria com a Toulon Náutica.</p>
+  <span class="skip">toque para pular</span>
+</div>
+<script>/* vinheta: uma vez por abertura do app */(function(){try{if(sessionStorage.getItem('pw-splash'))return;sessionStorage.setItem('pw-splash','1')}catch(e){}var s=document.getElementById('splash');s.hidden=false;var done=function(){if(s.parentNode)s.parentNode.removeChild(s)};s.addEventListener('click',done);setTimeout(done,5400)})();</script>
 <div class="wrap">
   <header class="top">
     <div>
       <div class="eyebrow">Navegação em Paraty · <span id="hoje"></span></div>
-      <h1>Limamar</h1>
+      <h1>Paraty Waters</h1>
     </div>
     <div class="top-right">
       <div style="display:flex;gap:8px;align-items:center">
         <span class="status" id="status">Carregando…</span>
         <button type="button" class="acct-btn" id="acct-btn" aria-label="Minha conta" hidden></button>
       </div>
-      <button type="button" class="ghost share" id="share-app" aria-label="Compartilhar o Limamar">
+      <button type="button" class="ghost share" id="share-app" aria-label="Compartilhar o Paraty Waters">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v13"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>
         Compartilhar
       </button>
@@ -419,8 +456,8 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
 
       <div class="panel" id="inst-panel">
         <h2>Instalar no celular</h2>
-        <p class="legend" style="margin:0" id="inst-txt">Coloque o Limamar na tela inicial: abre como aplicativo, em tela cheia, e funciona sem sinal no mar.</p>
-        <button type="button" id="inst-btn">Instalar o Limamar</button>
+        <p class="legend" style="margin:0" id="inst-txt">Coloque o Paraty Waters na tela inicial: abre como aplicativo, em tela cheia, e funciona sem sinal no mar.</p>
+        <button type="button" id="inst-btn">Instalar o Paraty Waters</button>
       </div>
 
       <div class="panel">
@@ -434,9 +471,9 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
 
 <dialog class="sheet" id="sheet" aria-labelledby="pl-name"><div class="in" id="sheet-in"></div></dialog>
 <div id="auth" class="auth" hidden></div>
-<div class="inst" id="inst" role="dialog" aria-label="Instalar o app Limamar" hidden>
+<div class="inst" id="inst" role="dialog" aria-label="Instalar o app Paraty Waters" hidden>
   <img src="icons/icon-192.png" alt="">
-  <div class="tx"><b>Instale o Limamar</b><span>Abre direto da tela inicial e funciona sem sinal.</span></div>
+  <div class="tx"><b>Instale o Paraty Waters</b><span>Abre direto da tela inicial e funciona sem sinal.</span></div>
   <div class="bt"><button type="button" id="inst-go">Instalar</button><button type="button" class="no" id="inst-no">Agora não</button></div>
 </div>
 <dialog class="sheet" id="inst-ios" aria-labelledby="ios-t"><div class="in">
@@ -444,7 +481,7 @@ nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--surface);border
   <ol class="steps">
     <li><b>1</b><span>Toque em <strong>Compartilhar</strong><svg viewBox="0 0 24 24" fill="none" stroke="#0a84ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg>na barra do Safari (embaixo ou em cima da tela).</span></li>
     <li><b>2</b><span>Role a lista e escolha <strong>Adicionar à Tela de Início</strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M12 8v8M8 12h8"/></svg>.</span></li>
-    <li><b>3</b><span>Toque em <strong>Adicionar</strong>. O ícone do Limamar aparece na tela inicial.</span></li>
+    <li><b>3</b><span>Toque em <strong>Adicionar</strong>. O ícone do Paraty Waters aparece na tela inicial.</span></li>
   </ol>
   <p class="legend" style="margin:0" id="ios-extra"></p>
   <button type="button" id="ios-ok">Entendi</button>
@@ -817,7 +854,7 @@ function renderWeather(loc,i){
 /* Compartilhar o app */
 $('share-app').onclick=async()=>{
   const url=location.origin+location.pathname.replace(/index\.html$/,'');
-  const data={title:'Limamar · Navegação em Paraty',text:'Previsão do tempo, vento, mar, maré e carta náutica da baía de Paraty no celular.',url};
+  const data={title:'Paraty Waters · Navegação em Paraty',text:'Previsão do tempo, vento, mar, maré e carta náutica da baía de Paraty no celular.',url};
   try{
     if(navigator.share){await navigator.share(data);return}
   }catch(e){if(e&&e.name==='AbortError')return}
@@ -834,9 +871,9 @@ const Inst=(()=>{
   const banner=$('inst'),panel=$('inst-panel');
   const dismissed=()=>{const t=store.get(KEY,0);return t&&Date.now()-t<DAYS*864e5};
   function refresh(){
-    if(standalone()){banner.hidden=true;$('inst-txt').textContent='O Limamar já está instalado neste celular.';$('inst-btn').hidden=true;return}
+    if(standalone()){banner.hidden=true;$('inst-txt').textContent='O Paraty Waters já está instalado neste celular.';$('inst-btn').hidden=true;return}
     $('inst-btn').hidden=!(deferred||ios);
-    if(!deferred&&!ios)$('inst-txt').textContent='Abra este endereço no Chrome (Android) ou no Safari (iPhone) para instalar o Limamar na tela inicial.';
+    if(!deferred&&!ios)$('inst-txt').textContent='Abra este endereço no Chrome (Android) ou no Safari (iPhone) para instalar o Paraty Waters na tela inicial.';
   }
   function showBanner(){if(!standalone()&&!dismissed()&&!document.documentElement.classList.contains('locked'))banner.hidden=false}
   async function go(){
@@ -889,6 +926,7 @@ function hav(a,b){const dl=rad(b.lat-a.lat),dn=rad(b.lon-a.lon);const h=Math.sin
 function bearing(a,b){const y=Math.sin(rad(b.lon-a.lon))*Math.cos(rad(b.lat)),x=Math.cos(rad(a.lat))*Math.sin(rad(b.lat))-Math.sin(rad(a.lat))*Math.cos(rad(b.lat))*Math.cos(rad(b.lon-a.lon));return (Math.atan2(y,x)*180/Math.PI+360)%360}
 function dm(v,pos,neg){const s=v<0?neg:pos;v=Math.abs(v);const g=Math.floor(v),m=(v-g)*60;return g+'°'+m.toFixed(2).replace('.',',')+"'"+s}
 let watch=null,last=null,t0=0,dist=0,vmax=0,spd=0,tick=null,lock=null,lastFix=store.get('np-lastfix',null);
+window.PW_TRIP=()=>watch!=null;
 async function keepAwake(){try{if('wakeLock' in navigator)lock=await navigator.wakeLock.request('screen')}catch(e){}}
 document.addEventListener('visibilitychange',()=>{if(watch!=null&&document.visibilityState==='visible')keepAwake()});
 function drawNav(){
@@ -1154,5 +1192,6 @@ if('serviceWorker' in navigator&&navigator.serviceWorker.controller){let reloade
 </script>
 <script>if(LM_AUTH)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.113.0/dist/umd/supabase.js"><\/script>')</script>
 <script src="conta.js"></script>
+<script src="popups.js" defer></script>
 </body>
 </html>

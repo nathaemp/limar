@@ -1,13 +1,13 @@
 {
-  "name": "Limamar · Navegação em Paraty",
-  "short_name": "Limamar",
-  "description": "Vento, mar, maré e GPS para barqueiros da baía de Paraty.",
+  "name": "Paraty Waters · Navegação em Paraty",
+  "short_name": "Paraty Waters",
+  "description": "Vento, mar, maré e GPS para quem navega na baía de Paraty. Lima Films × Toulon Náutica.",
   "lang": "pt-BR",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#0f5a6b",
+  "background_color": "#08171c",
   "theme_color": "#0f5a6b",
   "icons": [
     {

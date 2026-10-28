@@ -1,4 +1,4 @@
-# Limamar · Navegação em Paraty
+# Paraty Waters · Navegação em Paraty
 
 App para barqueiros e marinheiros da baía de Paraty: condições por ponto de passeio, vento hora a hora, maré, velocímetro pelo GPS e checklist de bordo.
 
@@ -14,7 +14,7 @@ Dados de previsão: [Open-Meteo](https://open-meteo.com) (CC BY 4.0). Não subst
 - Ilhas e praias: © colaboradores do [OpenStreetMap](https://www.openstreetmap.org/copyright); Ilha do Ventura pelo Portal Náutico.
 
 ## Contas de usuário
-- Login obrigatório com e-mail e senha (Supabase Auth, projeto "Limamar", região São Paulo). Confirmação por e-mail, senha com 8+ caracteres com letras e números, captcha Cloudflare Turnstile.
-- E-mails enviados pelo Brevo (SMTP), remetente "Limamar", textos em português.
+- Login obrigatório com e-mail e senha (Supabase Auth, projeto "Paraty Waters", região São Paulo). Confirmação por e-mail, senha com 8+ caracteres com letras e números, captcha Cloudflare Turnstile.
+- E-mails enviados pelo Brevo (SMTP), remetente "Paraty Waters", textos em português.
 - Banco: `supabase/limamar.sql` (perfis, fotos de perfil, excluir conta). O campo `plano` só muda pelo servidor (futuro: Kiwify).
 - Depois de entrar uma vez, o app abre sem internet.

@@ -1,4 +1,4 @@
-/* Limamar · administração
+/* Paraty Waters · administração
    Só abre para administradores (o banco confere em cada função).
    Painel com uso do app, quem está online, usuários e cortesias. */
 (()=>{
@@ -86,14 +86,15 @@ const css=document.createElement('style');css.textContent=`
 `;document.head.appendChild(css);
 
 /* ---------- estrutura ---------- */
-const root=document.createElement('div');root.id='admin';root.hidden=true;root.setAttribute('role','dialog');root.setAttribute('aria-label','Administração do Limamar');
+const root=document.createElement('div');root.id='admin';root.hidden=true;root.setAttribute('role','dialog');root.setAttribute('aria-label','Administração do Paraty Waters');
 root.innerHTML=`<div class="box">
-  <div class="top"><div><div class="eyebrow">Limamar</div><h1>Administração</h1></div>
+  <div class="top"><div><div class="eyebrow">Paraty Waters</div><h1>Administração</h1></div>
     <div style="display:flex;gap:8px"><button type="button" class="ghost" id="ad-ref" style="padding:8px 12px">Atualizar</button><button type="button" class="ghost x" id="ad-x" aria-label="Fechar" style="width:44px;height:44px;padding:0;border-radius:50%;font-size:1.4rem">×</button></div></div>
   <div class="seg" role="group" aria-label="Seções">
     <button type="button" data-s="painel" aria-pressed="true">Painel</button>
     <button type="button" data-s="usuarios" aria-pressed="false">Usuários</button>
     <button type="button" data-s="cortesias" aria-pressed="false">Cortesias</button>
+    <button type="button" data-s="popups" aria-pressed="false">Pop-ups</button>
   </div>
   <div id="ad-msg" aria-live="polite"></div>
   <div id="ad-body"><p class="empty">Carregando…</p></div>
@@ -118,6 +119,7 @@ async function carrega(silencioso){
   try{
     if(secao==='painel'){const {data,error}=await sb.rpc('admin_estatisticas');if(error)throw error;painel(data)}
     else if(secao==='usuarios'){const {data,error}=await sb.rpc('admin_usuarios');if(error)throw error;USERS=data||[];usuarios()}
+    else if(secao==='popups'){await popupsAdm()}
     else{const {data,error}=await sb.rpc('admin_cortesias');if(error)throw error;cortesias(data||[])}
   }catch(e){if(!silencioso)$('ad-body').innerHTML='';msg(erroTxt(e))}
 }
@@ -160,9 +162,9 @@ function painel(d){
       <ol style="margin:0;padding-left:20px;display:grid;gap:6px;font-size:.92rem">
         <li>Instale o app grátis <b>Scriptable</b> na App Store.</li>
         <li>Neste iPhone, toque em <button type="button" class="linkbtn" id="wg-copiar">copiar script</button>.</li>
-        <li>No Scriptable, toque em <b>+</b>, cole o script e salve com o nome <b>Limamar</b>.</li>
-        <li>Tela inicial: segure o dedo, toque em <b>+</b> (ou Editar › Adicionar widget), escolha <b>Scriptable</b>, tamanho médio, depois toque no widget e escolha o script Limamar.</li>
-        <li>Tela bloqueada: segure o dedo, <b>Personalizar</b> › Tela Bloqueada, adicione o widget Scriptable e escolha o script Limamar.</li>
+        <li>No Scriptable, toque em <b>+</b>, cole o script e salve com o nome <b>Paraty Waters</b>.</li>
+        <li>Tela inicial: segure o dedo, toque em <b>+</b> (ou Editar › Adicionar widget), escolha <b>Scriptable</b>, tamanho médio, depois toque no widget e escolha o script Paraty Waters.</li>
+        <li>Tela bloqueada: segure o dedo, <b>Personalizar</b> › Tela Bloqueada, adicione o widget Scriptable e escolha o script Paraty Waters.</li>
       </ol>
       <p class="legend" style="margin:0">Não compartilhe o script: ele leva a chave secreta dos números. Se ele vazar, toque em <button type="button" class="linkbtn" id="wg-nova">trocar a chave</button> (o widget antigo para de funcionar e você copia o script de novo).</p>
     </div>`)}
@@ -174,6 +176,74 @@ function painel(d){
   avisos();pushover();widget();qrcode();
 }
 
+
+/* ---------- pop-ups (Lima Acervo e Lima Hub) ---------- */
+const POP_DEF={acervo:{label:'Baixar no Lima Acervo',url:'https://limaacervo.lovable.app/assinatura'},hub:{label:'Abrir o Lima Hub',url:'https://limahubparaty.lovable.app'}};
+async function popupsAdm(){
+  const [p,c]=await Promise.all([sb.from('popups').select('*').order('kind').order('position'),sb.from('popup_settings').select('*').eq('id',1).maybeSingle()]);
+  if(p.error){$('ad-body').innerHTML=`<div class="panel"><p class="empty">Os pop-ups ainda não foram ativados no banco de dados. Rode o arquivo <b>supabase/popups.sql</b> no Supabase (SQL Editor) uma vez.</p></div>`;return}
+  const cfg=c.data||{every_minutes:15,enabled:true};const L=p.data||[];
+  const card=x=>`<div class="panel" data-id="${x.id}" style="display:grid;gap:10px">
+    <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;flex-wrap:wrap">
+      <b>${x.kind==='acervo'?'🎬 Lima Acervo':'🧰 Lima Hub'}</b>
+      <label style="display:flex;gap:6px;align-items:center;font-size:.9rem"><input type="checkbox" class="pp-on" ${x.active?'checked':''}> Ativo</label>
+    </div>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start">
+      <div style="width:120px;aspect-ratio:4/5;border-radius:14px;overflow:hidden;background:#08171c;flex-shrink:0">${x.video_path?`<video src="${esc(pubUrl(x.video_path))}" muted loop autoplay playsinline style="width:100%;height:100%;object-fit:cover"></video>`:x.poster_path?`<img src="${esc(pubUrl(x.poster_path))}" style="width:100%;height:100%;object-fit:cover">`:'<div style="height:100%;display:grid;place-items:center;color:#8fa9ae;font-size:.75rem;text-align:center;padding:6px">sem vídeo</div>'}</div>
+      <div style="flex:1;min-width:200px;display:grid;gap:8px">
+        <label class="f">Título<input type="text" class="pp-title" value="${esc(x.title)}"></label>
+        <label class="f">Texto<input type="text" class="pp-body" value="${esc(x.body)}"></label>
+        <label class="f">Texto do botão<input type="text" class="pp-cta" value="${esc(x.cta_label)}" placeholder="${esc(POP_DEF[x.kind].label)}"></label>
+        <label class="f">Link do botão<input type="url" class="pp-url" value="${esc(x.cta_url)}" placeholder="${esc(POP_DEF[x.kind].url)}"></label>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <label class="btn ghost" style="cursor:pointer">🎞 ${x.video_path?'Trocar vídeo':'Enviar vídeo'}<input type="file" class="pp-video" accept="video/mp4,video/quicktime,video/webm" hidden></label>
+      <label class="btn ghost" style="cursor:pointer">🖼 Capa<input type="file" class="pp-poster" accept="image/*" hidden></label>
+      <button type="button" class="pp-save">Salvar</button>
+      <button type="button" class="ghost pp-test">Ver como aparece</button>
+      <button type="button" class="ghost pp-del" style="color:var(--stop)">Apagar</button>
+    </div>
+    <span class="legend pp-msg" aria-live="polite"></span>
+  </div>`;
+  $('ad-body').innerHTML=`<div style="display:grid;gap:12px">
+    <div class="panel" style="display:grid;gap:10px">
+      <h2 style="font-size:1.3rem">Pop-ups no app</h2>
+      <p class="legend" style="margin:0">Alterna um do Lima Acervo e um do Lima Hub. O primeiro aparece depois de 3 minutos de uso e depois a cada intervalo abaixo. Nunca aparece durante uma viagem no velocímetro. No pop-up do Acervo, o botão leva para a assinatura.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:end">
+        <label class="f" style="max-width:170px">A cada (minutos)<input type="number" id="pp-every" min="1" max="240" value="${cfg.every_minutes}"></label>
+        <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" id="pp-enabled" ${cfg.enabled?'checked':''}> Pop-ups ligados</label>
+        <button type="button" id="pp-cfg">Salvar</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="ghost" id="pp-add-acervo">+ Pop-up do Lima Acervo</button><button type="button" class="ghost" id="pp-add-hub">+ Pop-up do Lima Hub</button></div>
+      <p class="legend" style="margin:0">Vídeo: MP4 vertical, até 60 MB (ideal: 10 a 20 segundos, 1080p ou menos). Toca sem som e em loop.</p>
+    </div>
+    ${L.map(card).join('')||'<p class="empty">Nenhum pop-up ainda.</p>'}
+  </div>`;
+  $('pp-cfg').onclick=async()=>{const {error}=await sb.from('popup_settings').update({every_minutes:Math.max(1,Math.min(240,+$('pp-every').value||15)),enabled:$('pp-enabled').checked}).eq('id',1);msg(error?erroTxt(error):'Configuração salva.',error?'err':'ok');window.PW_POPUP_RELOAD&&window.PW_POPUP_RELOAD()};
+  for(const k of ['acervo','hub'])$('pp-add-'+k).onclick=async()=>{const {error}=await sb.from('popups').insert({kind:k,title:'',body:'',cta_label:POP_DEF[k].label,cta_url:POP_DEF[k].url,position:L.length+1});if(error)return msg(erroTxt(error));popupsAdm()};
+  $('ad-body').querySelectorAll('[data-id]').forEach(el=>{
+    const id=el.dataset.id,x=L.find(i=>i.id===id),m=el.querySelector('.pp-msg');
+    const val=c=>el.querySelector(c).value.trim();
+    el.querySelector('.pp-save').onclick=async()=>{const {error}=await sb.from('popups').update({title:val('.pp-title'),body:val('.pp-body'),cta_label:val('.pp-cta')||POP_DEF[x.kind].label,cta_url:val('.pp-url')||POP_DEF[x.kind].url,active:el.querySelector('.pp-on').checked}).eq('id',id);m.textContent=error?erroTxt(error):'Salvo ✓';window.PW_POPUP_RELOAD&&window.PW_POPUP_RELOAD()};
+    el.querySelector('.pp-on').onchange=async e=>{await sb.from('popups').update({active:e.target.checked}).eq('id',id);m.textContent=e.target.checked?'Ativado':'Desativado';window.PW_POPUP_RELOAD&&window.PW_POPUP_RELOAD()};
+    el.querySelector('.pp-test').onclick=()=>{fechar();setTimeout(()=>window.PW_POPUP_SHOW&&window.PW_POPUP_SHOW({...x,title:val('.pp-title'),body:val('.pp-body'),cta_label:val('.pp-cta'),cta_url:val('.pp-url')||POP_DEF[x.kind].url}),200)};
+    el.querySelector('.pp-del').onclick=async()=>{if(!confirm('Apagar este pop-up?'))return;await sb.from('popups').delete().eq('id',id);const rm=[x.video_path,x.poster_path].filter(Boolean);if(rm.length)await sb.storage.from('popups').remove(rm);popupsAdm()};
+    const up=async(input,field,maxMB)=>{const f=input.files&&input.files[0];input.value='';if(!f)return;
+      if(f.size>maxMB*1048576){m.textContent=`Arquivo maior que ${maxMB} MB.`;return}
+      m.textContent='Enviando… (não feche esta tela)';
+      const ext=(f.name.split('.').pop()||'bin').toLowerCase().replace(/[^a-z0-9]/g,'');
+      const path=`${x.kind}/${id}-${Date.now()}.${ext}`;
+      const {error}=await sb.storage.from('popups').upload(path,f,{contentType:f.type||undefined,upsert:false,cacheControl:'604800'});
+      if(error){m.textContent=erroTxt(error);return}
+      const old=x[field];await sb.from('popups').update({[field]:path}).eq('id',id);if(old)await sb.storage.from('popups').remove([old]);
+      window.PW_POPUP_RELOAD&&window.PW_POPUP_RELOAD();popupsAdm()};
+    el.querySelector('.pp-video').onchange=e=>up(e.target,'video_path',60);
+    el.querySelector('.pp-poster').onchange=e=>up(e.target,'poster_path',8);
+  });
+}
+const pubUrl=p=>sb.storage.from('popups').getPublicUrl(p).data.publicUrl;
+
 /* ---------- QR Code do app ---------- */
 let qrLoad=null;
 const appUrl=()=>location.origin+location.pathname.replace(/index\.html$/,'');
@@ -184,7 +254,7 @@ async function qrcode(){
   let url=appUrl();
   const src=()=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(window.LimaQR.qrSvg(url,{size:1024}));
   box.innerHTML=`<div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">
-      <button type="button" id="qr-big" aria-label="Mostrar em tela cheia" style="padding:8px;background:#fff;border-radius:16px;border:0"><img id="qr-img" alt="QR Code do Limamar" style="width:176px;height:176px;display:block"></button>
+      <button type="button" id="qr-big" aria-label="Mostrar em tela cheia" style="padding:8px;background:#fff;border-radius:16px;border:0"><img id="qr-img" alt="QR Code do Paraty Waters" style="width:176px;height:176px;display:block"></button>
       <div style="flex:1;min-width:200px;display:grid;gap:8px">
         <label class="f">Link do QR Code<input type="url" id="qr-url" value="${esc(url)}"></label>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -200,18 +270,18 @@ async function qrcode(){
     const im=new Image();im.src=src();await im.decode();
     const S=1200,pad=60,c=document.createElement('canvas');c.width=S;c.height=S+120;const g=c.getContext('2d');
     g.fillStyle='#fff';g.fillRect(0,0,c.width,c.height);g.imageSmoothingEnabled=false;g.drawImage(im,pad,pad,S-pad*2,S-pad*2);
-    g.textAlign='center';g.fillStyle='#0d2a33';g.font='bold 52px system-ui,sans-serif';g.fillText('Limamar',S/2,S+40);
+    g.textAlign='center';g.fillStyle='#0d2a33';g.font='bold 52px system-ui,sans-serif';g.fillText('Paraty Waters',S/2,S+40);
     g.fillStyle='#557079';g.font='32px system-ui,sans-serif';g.fillText(url.replace(/^https?:\/\//,'').replace(/\/$/,''),S/2,S+90);
     return new Promise(ok=>c.toBlob(ok,'image/png'));
   }
-  const baixa=async()=>{const b=await png();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='qrcode-limamar.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
+  const baixa=async()=>{const b=await png();const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='qrcode-paraty-waters.png';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
   $('qr-dl').onclick=baixa;
-  $('qr-share').onclick=async()=>{const b=await png();const f=new File([b],'qrcode-limamar.png',{type:'image/png'});
-    try{if(navigator.canShare&&navigator.canShare({files:[f]}))return await navigator.share({files:[f],title:'Limamar',text:'Limamar: '+url});if(navigator.share)return await navigator.share({title:'Limamar',url})}catch(e){if(e&&e.name==='AbortError')return}
+  $('qr-share').onclick=async()=>{const b=await png();const f=new File([b],'qrcode-paraty-waters.png',{type:'image/png'});
+    try{if(navigator.canShare&&navigator.canShare({files:[f]}))return await navigator.share({files:[f],title:'Paraty Waters',text:'Paraty Waters: '+url});if(navigator.share)return await navigator.share({title:'Paraty Waters',url})}catch(e){if(e&&e.name==='AbortError')return}
     baixa()};
-  const tela=()=>{const d=document.createElement('div');d.setAttribute('role','dialog');d.setAttribute('aria-label','QR Code do Limamar');
+  const tela=()=>{const d=document.createElement('div');d.setAttribute('role','dialog');d.setAttribute('aria-label','QR Code do Paraty Waters');
     d.style.cssText='position:fixed;inset:0;z-index:9999;background:#fff;color:#0d2a33;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:24px';
-    d.innerHTML=`<img src="${src()}" alt="" style="width:min(86vw,70vh)"><div style="text-align:center"><b style="font-size:1.6rem">Limamar</b><div style="opacity:.6;margin-top:4px">Aponte a câmera do celular</div></div><span style="position:absolute;top:max(16px,env(safe-area-inset-top));right:16px;font-size:2rem;line-height:1">×</span>`;
+    d.innerHTML=`<img src="${src()}" alt="" style="width:min(86vw,70vh)"><div style="text-align:center"><b style="font-size:1.6rem">Paraty Waters</b><div style="opacity:.6;margin-top:4px">Aponte a câmera do celular</div></div><span style="position:absolute;top:max(16px,env(safe-area-inset-top));right:16px;font-size:2rem;line-height:1">×</span>`;
     d.onclick=()=>d.remove();document.body.appendChild(d)};
   $('qr-show').onclick=tela;$('qr-big').onclick=tela;
 }
@@ -220,7 +290,7 @@ async function qrcode(){
 function scriptWidget(chave){
   const url='https://gmqkbxxwutgntrnrqwjm.supabase.co/rest/v1/rpc/widget_estatisticas';
   const apikey='sb_publishable_Tf3vFF5ygNld9fWY8dP2rQ_dYnb7iV5';
-  return `// Limamar — números ao vivo (widget)
+  return `// Paraty Waters — números ao vivo (widget)
 // Cole no app Scriptable. Não compartilhe: a chave abaixo é secreta.
 const CHAVE = ${JSON.stringify(chave)};
 const URL_NUMEROS = ${JSON.stringify(url)};
@@ -248,7 +318,7 @@ w.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000);
 w.url = "https://nathaemp.github.io/limar/";
 
 if (!d) {
-  w.addText("Limamar: sem dados");
+  w.addText("Paraty Waters: sem dados");
 } else if (fam === "accessoryInline") {
   w.addText(\`⚓ \${n(d.online)} online · \${n(d.cadastros.day)} cadastros hoje\`);
 } else if (fam === "accessoryCircular") {
