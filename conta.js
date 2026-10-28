@@ -25,7 +25,9 @@ window.LM_SB=sb;
 
 /* ---------- trava / destrava ---------- */
 const auth=$('auth');
-function unlock(){html.classList.remove('locked');auth.hidden=true;auth.innerHTML='';$('acct-btn').hidden=false;drawBtn();drawAdminBtn()}
+function unlock(){html.classList.remove('locked');auth.hidden=true;auth.innerHTML='';$('acct-btn').hidden=false;drawBtn();drawAdminBtn();
+  // o aviso de instalar fica bloqueado na tela de entrar; mostra depois de entrar
+  setTimeout(()=>{try{window.PW_INST&&window.PW_INST.showBanner()}catch(e){}},1800)}
 function lock(view,msg){html.classList.add('locked');auth.hidden=false;$('acct-btn').hidden=true;go(view||'entrar',msg)}
 function setOK(u){ls.set('lm-ok',{id:u.id,email:u.email,t:Date.now()})}
 function clearLocal(){ls.del('lm-ok');ls.del('lm-perfil');ls.del('lm-plano');perfil=null;user=null;PLANO=null;drawAdminBtn()}
@@ -67,7 +69,9 @@ let lastEmail='';
 function go(view,msg){
   tsWidget=null;
   const V=VIEWS[view]||VIEWS.entrar;
-  auth.innerHTML=`<div class="box">${brand}${V.html(msg)}</div>`;
+  const inst=window.PW_INST;
+  auth.innerHTML=`<div class="box">${brand}${V.html(msg)}${(view==='entrar'||view==='criar')?`<button type="button" class="ghost a-inst" ${inst&&inst.pode()?'':'hidden'}>📲 Instalar o app no celular</button>`:''}</div>`;
+  auth.querySelectorAll('.a-inst').forEach(b=>b.onclick=()=>{try{window.PW_INST.go()}catch(e){}});
   wireEyes(auth);V.wire&&V.wire();
   auth.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>go(b.dataset.go));
   captcha(auth.querySelector('.cf-turnstile'));

@@ -881,7 +881,7 @@ const Inst=(()=>{
     if(deferred){deferred.prompt();const r=await deferred.userChoice.catch(()=>({}));deferred=null;if(r.outcome==='accepted')banner.hidden=true;refresh();return}
     if(ios){$('ios-extra').textContent=iosOther?'No iPhone, a instalação funciona pelo Safari. Se você abriu por outro app, copie o endereço e abra no Safari.':'';const d=$('inst-ios');d.showModal?d.showModal():d.setAttribute('open','')}
   }
-  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;refresh();showBanner()});
+  window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;refresh();showBanner();document.querySelectorAll('.a-inst').forEach(b=>b.hidden=false)});
   window.addEventListener('appinstalled',()=>{banner.hidden=true;deferred=null;refresh()});
   $('inst-go').onclick=go;$('inst-btn').onclick=go;
   $('inst-no').onclick=()=>{store.set(KEY,Date.now());banner.hidden=true};
@@ -889,8 +889,10 @@ const Inst=(()=>{
   $('inst-ios').addEventListener('click',e=>{if(e.target===$('inst-ios'))$('inst-ios').close()});
   refresh();
   if(ios&&!standalone())setTimeout(showBanner,2500);
-  return {refresh,showBanner};
+  const pode=()=>!standalone()&&(!!deferred||ios);
+  return {refresh,showBanner,go,pode};
 })();
+window.PW_INST=Inst;
 function flash(t){const s=$('status');const old=s.textContent,oc=s.className;s.textContent=t;s.className='status';setTimeout(()=>{s.textContent=old;s.className=oc},2500)}
 
 function renderTide(loc){
