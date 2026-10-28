@@ -1,4 +1,4 @@
--- Limamar · avisos no celular pelo app ntfy (cadastro novo e e-mail confirmado)
+-- Paraty Waters · avisos no celular pelo app ntfy (cadastro novo e e-mail confirmado)
 create extension if not exists pg_net with schema extensions;
 
 create table if not exists public.app_config (
@@ -18,7 +18,7 @@ begin
   if canal is null or canal !~ '^[A-Za-z0-9_-]{8,64}$' then return; end if;
   perform net.http_post(
     url := 'https://ntfy.sh/',
-    body := jsonb_build_object('topic', canal, 'title', 'Limamar · ' || titulo, 'message', coalesce(mensagem, ' '), 'priority', 4),
+    body := jsonb_build_object('topic', canal, 'title', 'Paraty Waters · ' || titulo, 'message', coalesce(mensagem, ' '), 'priority', 4),
     headers := '{"Content-Type": "application/json"}'::jsonb);
 exception when others then
   return;  -- aviso nunca pode atrapalhar o cadastro

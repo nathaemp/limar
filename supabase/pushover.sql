@@ -1,4 +1,4 @@
--- Limamar · avisos pelo Pushover com som escolhido para cada tipo
+-- Paraty Waters · avisos pelo Pushover com som escolhido para cada tipo
 -- (as chaves ficam só no banco; o painel nunca devolve as chaves para o navegador)
 
 drop function if exists public.avisar(text, text);
@@ -9,7 +9,7 @@ begin
   select value into canal from public.app_config where key = 'ntfy_topic';
   if canal ~ '^[A-Za-z0-9_-]{8,64}$' then
     perform net.http_post(url := 'https://ntfy.sh/',
-      body := jsonb_build_object('topic', canal, 'title', 'Limamar · ' || titulo, 'message', coalesce(mensagem, ' '), 'priority', 4),
+      body := jsonb_build_object('topic', canal, 'title', 'Paraty Waters · ' || titulo, 'message', coalesce(mensagem, ' '), 'priority', 4),
       headers := '{"Content-Type": "application/json"}'::jsonb);
   end if;
   select value into pu from public.app_config where key = 'pushover_user';
@@ -17,7 +17,7 @@ begin
   if pu is not null and pt is not null then
     select value into som from public.app_config where key = 'som_' || tipo;
     select net.http_post(url := 'https://api.pushover.net/1/messages.json',
-      body := jsonb_build_object('token', pt, 'user', pu, 'title', 'Limamar · ' || titulo, 'message', coalesce(mensagem, ' '),
+      body := jsonb_build_object('token', pt, 'user', pu, 'title', 'Paraty Waters · ' || titulo, 'message', coalesce(mensagem, ' '),
                                  'sound', coalesce(som, case tipo when 'cadastro' then 'tugboat' when 'confirmado' then 'magic' else 'pushover' end)),
       headers := '{"Content-Type": "application/json"}'::jsonb) into rid;
   end if;

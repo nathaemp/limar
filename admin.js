@@ -305,9 +305,9 @@ async function carrega() {
     r.body = JSON.stringify({ chave: CHAVE });
     r.timeoutInterval = 15;
     const d = await r.loadJSON();
-    if (d && d.ready) { Keychain.set("limamar-numeros", JSON.stringify(d)); return d; }
+    if (d && d.ready) { Keychain.set("paratywaters-numeros", JSON.stringify(d)); return d; }
   } catch (e) {}
-  return Keychain.contains("limamar-numeros") ? JSON.parse(Keychain.get("limamar-numeros")) : null;
+  return Keychain.contains("paratywaters-numeros") ? JSON.parse(Keychain.get("paratywaters-numeros")) : null;
 }
 
 const n = (v) => new Intl.NumberFormat("pt-BR").format(v || 0);
@@ -330,7 +330,7 @@ if (!d) {
   const c = w.addText(\`\${n(d.cliques.day)} cliques · \${n(d.usuarios)} contas\`); c.font = Font.systemFont(11);
 } else {
   w.backgroundColor = MAR;
-  const h = w.addText("LIMAMAR · HOJE"); h.font = Font.semiboldSystemFont(10); h.textColor = AREIA;
+  const h = w.addText("PARATY WATERS · HOJE"); h.font = Font.semiboldSystemFont(10); h.textColor = AREIA;
   w.addSpacer(4);
   const o = w.addText(\`● \${n(d.online)} online agora\`); o.font = Font.boldSystemFont(fam === "small" ? 16 : 20); o.textColor = VERDE;
   w.addSpacer(6);
