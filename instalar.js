@@ -18,6 +18,7 @@ const track=d=>{try{window.LM_TRACK&&LM_TRACK('clique','instalar-guia-'+d)}catch
 
 /* ícones iguais aos do iPhone */
 const I={
+  menu:'<svg viewBox="0 0 28 28"><path d="M6 8.5h16M6 14h12M6 19.5h16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
   mais:'<svg viewBox="0 0 28 28"><circle cx="14" cy="14" r="12.5" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="8.5" cy="14" r="1.9" fill="currentColor"/><circle cx="14" cy="14" r="1.9" fill="currentColor"/><circle cx="19.5" cy="14" r="1.9" fill="currentColor"/></svg>',
   share:'<svg viewBox="0 0 28 28"><path d="M9.5 11H7.5a1.5 1.5 0 0 0-1.5 1.5v11A1.5 1.5 0 0 0 7.5 25h13a1.5 1.5 0 0 0 1.5-1.5v-11A1.5 1.5 0 0 0 20.5 11h-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M14 17V3M9.5 7.5 14 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   addhome:'<svg viewBox="0 0 28 28"><rect x="4" y="4" width="20" height="20" rx="5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M14 9v10M9 14h10" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
@@ -42,8 +43,8 @@ function plano(){
       ['share','Toque em <b>Compartilhar</b>, no alto da tela, à direita.'+(novo?' (se não aparecer, toque em <b>⋯</b> primeiro)':'')],
       ['addhome','Toque em <b>Adicionar à Tela de Início</b>.'],
       ['ok','Toque em <b>Adicionar</b>.']]};
-  if(novo)return {tipo:'safari26',onde:'br',titulo:'Instalar em 4 toques',passos:[
-      ['mais','Toque no <b>⋯</b>, ao lado do endereço do site.'],
+  if(novo)return {tipo:'safari26',onde:'bl',titulo:'Instalar em 4 toques',passos:[
+      ['menu','Toque no <b>☰</b>, dentro da barra do endereço, à esquerda (na parte de baixo da tela).'],
       ['share','Toque em <b>Compartilhar</b>.'],
       ['addhome','Role para baixo e toque em <b>Adicionar à Tela de Início</b>.'],
       ['ok','Toque em <b>Adicionar</b>, no canto de cima. Pronto!']]};
@@ -80,9 +81,11 @@ const css=document.createElement('style');css.textContent=`
 #pw-ig .arw svg{width:64px;height:64px}
 #pw-ig .arw span{background:#e9b949;color:#1d1606;font-weight:700;font-size:.85rem;padding:6px 12px;border-radius:999px;white-space:nowrap}
 #pw-ig .arw.br{right:2px;bottom:calc(6px + env(safe-area-inset-bottom,0px))}
+#pw-ig .arw.bl{left:calc(29% - 32px);bottom:calc(6px + env(safe-area-inset-bottom,0px));justify-items:start}
+#pw-ig .arw.bl span{margin-left:-6px}
 #pw-ig .arw.bc{left:50%;bottom:calc(6px + env(safe-area-inset-bottom,0px));transform:translateX(-50%)}
 #pw-ig .arw.tr{right:6px;top:calc(4px + env(safe-area-inset-top,0px))}
-#pw-ig .arw.br svg,#pw-ig .arw.bc svg{animation:ig-down 1s ease-in-out infinite}
+#pw-ig .arw.br svg,#pw-ig .arw.bc svg,#pw-ig .arw.bl svg{animation:ig-down 1s ease-in-out infinite}
 #pw-ig .arw.tr svg{animation:ig-up 1s ease-in-out infinite}
 #pw-ig .arw.br span{margin-right:12px}
 @keyframes ig-in{from{opacity:0}}
@@ -101,7 +104,7 @@ function abrir(){
   const seta=baixo
     ?'<svg viewBox="0 0 64 64"><path d="M32 6v44M14 34l18 18 18-18" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>'
     :'<svg viewBox="0 0 64 64"><path d="M32 58V14M14 30l18-18 18 18" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-  const lbl=P.tipo==='inapp'?'ou aqui: ⋯':P.tipo==='safari26'?'Comece aqui: ⋯':'Comece aqui';
+  const lbl=P.tipo==='inapp'?'ou aqui: ⋯':P.tipo==='safari26'?'Comece aqui: ☰':'Comece aqui';
   const el=document.createElement('div');el.id='pw-ig';el.className=baixo?'top':'bot';el.setAttribute('role','dialog');el.setAttribute('aria-label','Como instalar o Paraty Waters');
   el.innerHTML=`<div class="card">
     <div class="hd"><img src="icons/icon-192.png" alt=""><div><b>${P.titulo}</b><small>O ícone do Paraty Waters vai para a tela inicial</small></div><button type="button" class="x" aria-label="Fechar">×</button></div>
