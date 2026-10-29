@@ -1,0 +1,83 @@
+/* Paraty Waters · ferramentas de navegação (marcar, medir, ir até, rota, âncora, homem ao mar, diário) */
+.tools{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0}
+.tools::-webkit-scrollbar{display:none}
+.tools button{flex:none;padding:8px 12px;font-size:.86rem;border-radius:999px;border-width:1.5px;background:var(--surface);color:var(--ink);border-color:var(--line);white-space:nowrap}
+.tools button[aria-pressed="true"]{background:var(--bay);color:var(--on-bay);border-color:var(--bay)}
+.tools button.mob{background:var(--stop);border-color:var(--stop);color:#fff}
+.tpanel{display:grid;gap:10px}
+.tpanel[hidden]{display:none}
+.tpanel .hd{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tpanel .hd h2{font-size:1.3rem}
+.tpanel .hd button{padding:6px 12px;font-size:.85rem}
+.tpanel select,.tpanel input,.fsheet select,.fsheet input,.fsheet textarea{font:inherit;font-size:1rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%;min-width:0}
+.fsheet textarea{min-height:70px;resize:vertical}
+.legs{display:grid;gap:4px;font-size:.88rem}
+.legs div{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:6px 8px;border-radius:8px;background:var(--bay-soft)}
+.legs div b{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.legs .n{width:22px;height:22px;border-radius:50%;background:var(--bay);color:var(--on-bay);display:grid;place-items:center;font-size:.75rem;font-weight:700}
+.sm{padding:8px 12px !important;font-size:.88rem !important}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{padding:6px 12px;font-size:.85rem;border-radius:999px;border-width:1.5px;background:transparent;color:var(--ink);border-color:var(--line)}
+.chips button[aria-pressed="true"]{background:var(--bay);color:var(--on-bay);border-color:var(--bay)}
+
+/* desenho sobre a carta */
+.map .ov{position:absolute;inset:0;width:100%;height:100%;z-index:2;pointer-events:none;overflow:visible}
+.map .ovmk{position:absolute;inset:0;z-index:3;pointer-events:none}
+.mk2{position:absolute;transform:translate(-50%,-50%);pointer-events:auto;cursor:pointer;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.95);border:2px solid #0d2a33;font-size:15px;line-height:1;box-shadow:0 1px 4px rgba(0,0,0,.35)}
+.mk2.perigo,.mk2.raso{background:#ffe1dc;border-color:#c0392b}
+.mk2.pend{border-style:dashed;opacity:.8}
+.mk2.loc::after{content:"";position:absolute;right:-3px;top:-3px;width:9px;height:9px;border-radius:50%;background:#e9b949;border:1.5px solid #0d2a33}
+.mk2 span{position:absolute;top:31px;left:50%;transform:translateX(-50%);font-size:.68rem;font-weight:700;color:#fff;white-space:nowrap;text-shadow:0 0 3px #000,0 0 2px #000}
+.mk2.small{width:22px;height:22px;font-size:11px}
+.mk2.small span{display:none}
+.mapbtns2{position:absolute;right:8px;top:164px;z-index:4;display:grid;gap:6px}
+.mapbtns2 button{width:44px;height:44px;padding:0;font-size:1.05rem;line-height:1;border-radius:10px;background:var(--surface);color:var(--ink);border:1px solid var(--line);box-shadow:0 1px 3px rgba(0,0,0,.2)}
+.mapbtns2 button.on{background:var(--bay);color:var(--on-bay);border-color:var(--bay)}
+.maphint{position:absolute;left:50%;top:8px;transform:translateX(-50%);z-index:5;background:var(--sand);color:#1d1606;font-size:.8rem;font-weight:700;padding:6px 10px;border-radius:8px;max-width:60%;text-align:center;pointer-events:none}
+.maphint[hidden]{display:none}
+@media (max-width:420px){.maphint{top:auto;bottom:34px;max-width:80%}}
+
+/* barra "ir até" (fica sobre todas as abas) */
+#pw-nav{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:40;display:flex;justify-content:center;padding:0 8px 6px;pointer-events:none}
+#pw-nav[hidden]{display:none}
+#pw-nav .in{pointer-events:auto;width:min(544px,100%);background:#0d2a33;color:#fff;border-radius:14px;padding:10px 12px;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;box-shadow:0 6px 20px rgba(0,0,0,.35)}
+#pw-nav.mob .in{background:#8f1d12}
+#pw-nav .arw{width:46px;height:46px;border-radius:50%;background:rgba(255,255,255,.12);display:grid;place-items:center}
+#pw-nav .arw svg{width:30px;height:30px;transition:transform .4s}
+#pw-nav .t{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;opacity:.8;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#pw-nav .v{font-family:var(--mono);font-size:1.05rem;font-variant-numeric:tabular-nums;line-height:1.3}
+#pw-nav .v small{font-family:var(--body);font-size:.75rem;opacity:.8}
+#pw-nav button{background:rgba(255,255,255,.14);border:0;color:#fff;width:40px;height:40px;padding:0;border-radius:50%;font-size:1.2rem}
+#pw-nav .acts{display:flex;gap:6px}
+
+/* alerta de perigo e alarme */
+#pw-alert{position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px));z-index:9500;display:flex;justify-content:center;pointer-events:none}
+#pw-alert[hidden]{display:none}
+#pw-alert .in{pointer-events:auto;width:min(544px,100%);background:#c0392b;color:#fff;border-radius:14px;padding:12px 14px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.4);display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;animation:pwa-in .25s ease-out}
+#pw-alert .in.ok{background:#1f8a4c}
+#pw-alert .ic{font-size:1.6rem}
+#pw-alert small{display:block;font-weight:400;opacity:.9}
+#pw-alert button{background:rgba(255,255,255,.2);border:0;color:#fff;padding:8px 12px;border-radius:10px}
+@keyframes pwa-in{from{transform:translateY(-20px);opacity:0}}
+#pw-alarm{position:fixed;inset:0;z-index:9600;background:#b3261e;color:#fff;display:grid;place-items:center;text-align:center;padding:24px;animation:pw-pulse 1s infinite alternate}
+#pw-alarm[hidden]{display:none}
+#pw-alarm h2{font-size:2.4rem;line-height:1.05}
+#pw-alarm .big{font-family:var(--mono);font-size:3rem;margin:10px 0}
+#pw-alarm button{background:#fff;color:#b3261e;border-color:#fff;min-width:220px;margin:6px}
+#pw-alarm button.ghost{background:transparent;color:#fff}
+@keyframes pw-pulse{to{background:#7d150f}}
+
+/* diário de viagens */
+.trips{display:grid;gap:8px}
+.trip{background:var(--bay-soft);border-radius:10px;padding:10px 12px;display:grid;gap:8px}
+.trip .tt{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-weight:700}
+.trip .tt small{font-weight:400;color:var(--muted)}
+.trip .nums{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:.9rem}
+.trip .row button{padding:7px 10px;font-size:.84rem}
+.mobbig{background:var(--stop);border-color:var(--stop);color:#fff;font-size:1.05rem;padding:14px}
+.live-link{font-family:var(--mono);font-size:.82rem;background:var(--bay-soft);border-radius:8px;padding:8px 10px;overflow-wrap:anywhere}
+
+/* modo noturno: tudo em vermelho escuro, não ofusca a vista à noite */
+html.night{filter:grayscale(1) sepia(1) saturate(5) hue-rotate(-45deg) brightness(.42) contrast(1.15)}
+html.night body{background:#000}
+body.navon .wrap{padding-bottom:calc(180px + env(safe-area-inset-bottom,0px))}

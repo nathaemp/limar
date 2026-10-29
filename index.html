@@ -19,6 +19,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <script>var LM_AUTH=true;/* login obrigatório (Supabase) */if(LM_AUTH){try{if(!localStorage.getItem('lm-ok'))document.documentElement.classList.add('locked')}catch(e){document.documentElement.classList.add('locked')}}</script>
 <link rel="stylesheet" href="conta.css">
+<link rel="stylesheet" href="ferramentas.css?v=2">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Atkinson+Hyperlegible:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* Layout: app de convés, uma coluna, abas fixas embaixo; alto contraste para ler sob sol */
@@ -742,11 +743,13 @@ function openPlace(id){
   $('sheet-in').innerHTML=`<div class="hd"><div><div class="eyebrow">${kind(p.n)} · ${regName} · ${esc(z.n)}</div><h2 id="pl-name">${esc(p.n)}</h2></div>
       <button type="button" class="ghost x" id="pl-x" aria-label="Fechar">×</button></div>
     ${body}
-    <div class="row"><button type="button" id="pl-map">Ver na carta</button><button type="button" class="ghost" id="pl-rota">Pôr no roteiro</button></div>
+    <div class="row"><button type="button" id="pl-go">🧭 Ir até aqui</button><button type="button" class="ghost" id="pl-map">Ver na carta</button></div>
+    <button type="button" class="ghost" id="pl-rota">Pôr no roteiro do aviso</button>
     <span class="legend" id="pl-msg" aria-live="polite"></span>`;
   const dlg=$('sheet');
   $('pl-x').onclick=()=>dlg.close();
   $('pl-map').onclick=()=>{dlg.close();Carta.focus(p);show('carta')};
+  $('pl-go').onclick=()=>{dlg.close();window.PW_GOTO&&PW_GOTO({n:p.n,lat:p.lat,lon:p.lon})};
   $('pl-rota').onclick=()=>{const f=$('f-rota');const cur=f.value.split(',').map(s=>s.trim()).filter(Boolean);
     if(!cur.includes(p.n))cur.push(p.n);f.value=cur.join(', ');f.dispatchEvent(new Event('input'));$('pl-msg').textContent='Incluído no roteiro da aba Bordo.'};
   if(dlg.showModal){if(!dlg.open)dlg.showModal()}else dlg.setAttribute('open','');
@@ -962,12 +965,14 @@ $('gps-start').onclick=()=>{
   watch=navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,maximumAge:1000,timeout:20000});
   tick=setInterval(drawNav,1000);keepAwake();
   $('gps-start').disabled=true;$('gps-stop').disabled=false;$('gps-msg').textContent='Procurando sinal de GPS…';
+  window.dispatchEvent(new CustomEvent('pw-trip',{detail:{on:true}}));
 };
 $('gps-stop').onclick=()=>{
   if(watch!=null)navigator.geolocation.clearWatch(watch);watch=null;clearInterval(tick);
   try{lock&&lock.release()}catch(e){}lock=null;spd=0;drawNav();
   $('gps-start').disabled=false;$('gps-stop').disabled=true;
-  $('gps-msg').textContent='Viagem encerrada: '+fmt(dist,2)+' milhas em '+$('tempo').textContent+'.';
+  $('gps-msg').textContent='Viagem encerrada: '+fmt(dist,2)+' milhas em '+$('tempo').textContent+'. Ela ficou gravada no Diário de viagens, aqui embaixo.';
+  window.dispatchEvent(new CustomEvent('pw-trip',{detail:{on:false,dist,vmax}}));
 };
 drawNav();
 
@@ -982,6 +987,7 @@ function buildShare(){
   if(fv.rota)L.push('Roteiro: '+fv.rota);
   if(fv.volta)L.push('Volta prevista: '+fv.volta);
   if(shareLoc)L.push('Posição: https://maps.google.com/?q='+shareLoc.lat.toFixed(5)+','+shareLoc.lon.toFixed(5));
+  try{const lv=window.PW_LIVE_URL&&PW_LIVE_URL();if(lv)L.push('Acompanhe ao vivo: '+lv)}catch(e){}
   const txt=L.join('\n');$('sharetxt').textContent=txt;$('share-wa').href='https://wa.me/?text='+encodeURIComponent(txt);
 }
 $('share-loc').onclick=()=>{
@@ -1075,6 +1081,7 @@ const Carta=(()=>{
     }else b.hidden=true;
     // nomes das ilhas e praias
     drawMarks(left,top,r);
+    try{window.PW_OV&&PW_OV({left,top,r,W,H,zoom,cy,xy:(la,lo)=>({x:(mX(lo)-left)/r,y:(top-mY(la))/r})})}catch(e){console.error(e)}
     // escala
     const mpp=r*Math.cos(Math.atan(Math.sinh(cy/RE)));   // metros reais por pixel
     const opts=[50,100,200,500,1000,1852,3704,9260];let best=opts[0];
@@ -1107,7 +1114,7 @@ const Carta=(()=>{
   function stopFollow(){if(follow){follow=false;$('m-gps').classList.remove('on')}}
   // gestos
   const pts=new Map();let last=null,lastTap=0,down=null;
-  el.addEventListener('pointerdown',e=>{el.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});last=null;down=pts.size===1?{x:e.clientX,y:e.clientY}:null});
+  el.addEventListener('pointerdown',e=>{if(e.target.closest&&e.target.closest('button,a'))return;el.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});last=null;down=pts.size===1?{x:e.clientX,y:e.clientY}:null});
   el.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
     const rc=el.getBoundingClientRect(),P=[...pts.values()];
     if(P.length===1){const p=P[0];if(last&&last.n===1){cx-=(p.x-last.x)*res(zoom);cy+=(p.y-last.y)*res(zoom);stopFollow();req()}last={n:1,x:p.x,y:p.y}}
@@ -1119,6 +1126,7 @@ const Carta=(()=>{
   el.addEventListener('pointerup',e=>{const now=Date.now();
     const tap=down&&Math.hypot(e.clientX-down.x,e.clientY-down.y)<8;
     if(pts.size===1&&tap){const hit=document.elementFromPoint(e.clientX,e.clientY);const m=hit&&hit.closest&&hit.closest('.mk');
+      if(window.PW_MAPTAP){const rc=el.getBoundingClientRect(),g=ll(e.clientX-rc.left,e.clientY-rc.top);if(PW_MAPTAP(g.lat,g.lon,hit)){up(e);lastTap=0;return}}
       if(m){up(e);lastTap=0;openPlace(m.dataset.p);return}}
     if(pts.size===1&&tap&&now-lastTap<300){const rc=el.getBoundingClientRect();zoomAt(zoom+1,e.clientX-rc.left,e.clientY-rc.top)}
     if(tap)lastTap=now;up(e)});
@@ -1173,7 +1181,12 @@ const Carta=(()=>{
   };
   function focus(p){hl=p.id;follow=false;$('m-gps').classList.remove('on');$('m-gps').dataset.done=1;
     cx=mX(p.lon);cy=mY(p.lat);zoom=Math.max(zoom,14.5);colorMarks();req()}
-  return {show(){windNow();startGPS();req()},hide(){stopGPS()},windNow,focus,marks(){colorMarks();req()}};
+  function ll(sx,sy){const r=res(zoom),mx=cx-W/2*r+sx*r,my=cy+H/2*r-sy*r;return {lon:mx/RE*180/Math.PI,lat:(2*Math.atan(Math.exp(my/RE))-Math.PI/2)*180/Math.PI}}
+  function goTo(lat,lon,z){stopFollow();$('m-gps').dataset.done=1;cx=mX(lon);cy=mY(lat);zoom=clampZ(Math.max(zoom,z||14));req()}
+  function fit(a,o,c,w){stopFollow();$('m-gps').dataset.done=1;W=el.clientWidth||W;H=el.clientHeight||H;
+    cx=(mX(o)+mX(w))/2;cy=(mY(a)+mY(c))/2;const r=Math.max((mX(w)-mX(o))/Math.max(60,W-70),(mY(c)-mY(a))/Math.max(60,H-90),res(16));
+    zoom=clampZ(Math.log2(2*ORIG/(256*r)));req()}
+  return {show(){windNow();startGPS();req()},hide(){stopGPS()},windNow,focus,marks(){colorMarks();req()},req,goTo,fit};
 })();
 
 /* ---------- Abas ---------- */
@@ -1194,6 +1207,7 @@ if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.ser
 if('serviceWorker' in navigator&&navigator.serviceWorker.controller){let reloaded=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(reloaded)return;reloaded=true;location.reload()})}
 </script>
 <script>if(LM_AUTH)document.write('<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.113.0/dist/umd/supabase.js"><\/script>')</script>
+<script src="ferramentas.js?v=2"></script>
 <script src="conta.js"></script>
 <script src="popups.js?v=3" defer></script>
 </body>

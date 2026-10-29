@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f5a6b">
+<meta name="robots" content="noindex">
+<title>Barco ao vivo · Paraty Waters</title>
+<link rel="icon" href="icons/favicon-32.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+<style>
+:root{--bg:#eef2f1;--surface:#fff;--ink:#0d2a33;--muted:#557079;--line:#cfdcdb;--bay:#0f5a6b;--sand:#e9b949;--go:#1f8a4c;--stop:#c0392b}
+@media (prefers-color-scheme:dark){:root{--bg:#08171c;--surface:#0f242b;--ink:#e6f1f1;--muted:#8fa9ae;--line:#1f3a42;--bay:#4fb3c6}}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif}
+.app{display:grid;grid-template-rows:auto 1fr auto;height:100dvh}
+header{padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border-bottom:1px solid var(--line)}
+header b{font-size:1.1rem}
+header small{display:block;color:var(--muted);font-size:.78rem}
+#map{width:100%;height:100%;background:#cfd8da}
+.info{background:var(--surface);border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.info div{background:rgba(15,90,107,.1);border-radius:10px;padding:8px 10px;min-width:0}
+.info span{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700}
+.info b{font-variant-numeric:tabular-nums;font-size:1.05rem}
+.msg{grid-column:1/-1;font-size:.85rem;color:var(--muted);margin:0}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--go);margin-right:6px;animation:p 1.4s infinite}
+.dot.off{background:var(--stop);animation:none}
+@keyframes p{50%{opacity:.3}}
+.seg{display:flex;gap:4px}
+.seg button{font:inherit;font-size:.8rem;font-weight:700;border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:8px;padding:6px 10px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--bay);color:#fff;border-color:var(--bay)}
+.boat{width:30px;height:30px}
+</style>
+</head>
+<body>
+<div class="app">
+  <header><div><b id="tt">Barco ao vivo</b><small id="sub">Paraty Waters</small></div>
+    <div class="seg"><button type="button" data-l="sat" aria-pressed="true">Satélite</button><button type="button" data-l="map" aria-pressed="false">Mapa</button></div></header>
+  <div id="map" role="img" aria-label="Mapa com a posição do barco"></div>
+  <div class="info">
+    <div><span>Velocidade</span><b id="v">—</b></div>
+    <div><span>Rumo</span><b id="h">—</b></div>
+    <div><span>Atualizado</span><b id="u">—</b></div>
+    <p class="msg" id="msg"><span class="dot off"></span>Carregando…</p>
+  </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+<script>
+(function(){
+'use strict';
+const URL_='https://gmqkbxxwutgntrnrqwjm.supabase.co',KEY='sb_publishable_Tf3vFF5ygNld9fWY8dP2rQ_dYnb7iV5';
+const k=new URLSearchParams(location.search).get('k')||'';
+const $=id=>document.getElementById(id);
+const fmt=(n,d=1)=>n==null||isNaN(n)?'—':Number(n).toFixed(d).replace('.',',');
+const DIR=['N','NNE','NE','ENE','L','ESE','SE','SSE','S','SSO','SO','OSO','O','ONO','NO','NNO'];
+const clock=t=>new Intl.DateTimeFormat('pt-BR',{hour:'2-digit',minute:'2-digit',timeZone:'America/Sao_Paulo'}).format(new Date(t));
+const map=L.map('map',{zoomControl:true,attributionControl:true}).setView([-23.205,-44.68],12);
+const sat=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'Imagens: Esri, Maxar, Earthstar Geographics'});
+const osm=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'});
+sat.addTo(map);
+document.querySelectorAll('[data-l]').forEach(b=>b.onclick=()=>{const s=b.dataset.l==='sat';map.removeLayer(s?osm:sat);(s?sat:osm).addTo(map);document.querySelectorAll('[data-l]').forEach(x=>x.setAttribute('aria-pressed',x===b))});
+let mk=null,circle=null,trail=[],line=null,first=true;
+const icon=h=>L.divIcon({className:'',iconSize:[30,30],iconAnchor:[15,15],html:`<svg class="boat" viewBox="0 0 30 30">${h!=null?`<g transform="rotate(${h} 15 15)"><path d="M15 2 L24 26 L15 21 L6 26 Z" fill="#e9b949" stroke="#0d2a33" stroke-width="2" stroke-linejoin="round"/></g>`:'<circle cx="15" cy="15" r="8" fill="#e9b949" stroke="#0d2a33" stroke-width="2.5"/>'}</svg>`});
+function msg(t,on){$('msg').innerHTML=`<span class="dot${on?'':' off'}"></span>${t}`}
+async function load(){
+  if(!/^[0-9a-f]{24}$/.test(k)){msg('Link incompleto. Peça o link de novo para quem está no barco.');return}
+  try{
+    const r=await fetch(URL_+'/rest/v1/rpc/ver_ao_vivo',{method:'POST',headers:{apikey:KEY,'Content-Type':'application/json'},body:JSON.stringify({k})});
+    if(!r.ok)throw new Error(r.status);const d=await r.json();
+    if(!d){msg('Este link não existe ou já foi apagado.');return}
+    if(d.barco){$('tt').textContent=d.barco;document.title=d.barco+' ao vivo · Paraty Waters'}
+    if(!d.ativo){msg('O compartilhamento terminou às '+clock(d.expira)+'.');$('sub').textContent='Compartilhamento encerrado';if(mk)mk.setOpacity(.5);return}
+    $('sub').textContent='Ao vivo até '+clock(d.expira);
+    if(d.lat==null){msg('Esperando a primeira posição do barco…',true);return}
+    const ll=[d.lat,d.lon],old=(Date.parse(d.agora)-Date.parse(d.atualizado))/60000;
+    if(!mk){mk=L.marker(ll,{icon:icon(d.spd>1?d.hdg:null)}).addTo(map);circle=L.circle(ll,{radius:d.acc||20,color:'#e9b949',weight:1,fillOpacity:.12}).addTo(map)}
+    else{mk.setLatLng(ll);mk.setIcon(icon(d.spd>1?d.hdg:null));circle.setLatLng(ll).setRadius(d.acc||20)}
+    const l=trail[trail.length-1];if(!l||l[0]!==ll[0]||l[1]!==ll[1]){trail.push(ll);if(trail.length>500)trail.shift()}
+    if(trail.length>1){if(!line)line=L.polyline(trail,{color:'#e9b949',weight:3,opacity:.85}).addTo(map);else line.setLatLngs(trail)}
+    if(first){map.setView(ll,15);first=false}
+    $('v').textContent=fmt(d.spd)+' nós';
+    $('h').textContent=d.hdg!=null&&d.spd>1?Math.round(d.hdg)+'° '+DIR[Math.round(d.hdg/22.5)%16]:'—';
+    $('u').textContent=clock(d.atualizado);
+    msg(old>10?'Sem posição nova há '+Math.round(old)+' min. O celular do barco pode estar sem sinal ou com o app fechado.':'Recebendo a posição. A tela atualiza sozinha.',old<=10);
+  }catch(e){msg('Sem conexão. Tentando de novo…')}
+}
+load();setInterval(()=>{if(document.visibilityState==='visible')load()},15000);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')load()});
+})();
+</script>
+</body>
+</html>

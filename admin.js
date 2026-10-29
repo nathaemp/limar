@@ -20,7 +20,7 @@ const css=document.createElement('style');css.textContent=`
 #admin .box{max-width:760px;margin:0 auto;padding:calc(14px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-left,0px)) calc(40px + env(safe-area-inset-bottom,0px));display:grid;gap:16px}
 #admin .top{display:flex;justify-content:space-between;align-items:center;gap:10px}
 #admin .top h1{font-family:var(--display);font-size:2rem;margin:0;line-height:1}
-#admin .seg{grid-template-columns:repeat(3,1fr)}
+#admin .seg{grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}
 #admin .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
 #admin .kpi{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;display:grid;gap:2px}
 #admin .kpi b{font-family:var(--display);font-size:2rem;line-height:1}
@@ -95,6 +95,7 @@ root.innerHTML=`<div class="box">
     <button type="button" data-s="usuarios" aria-pressed="false">Usuários</button>
     <button type="button" data-s="cortesias" aria-pressed="false">Cortesias</button>
     <button type="button" data-s="popups" aria-pressed="false">Pop-ups</button>
+    <button type="button" data-s="pontos" aria-pressed="false">Pontos</button>
   </div>
   <div id="ad-msg" aria-live="polite"></div>
   <div id="ad-body"><p class="empty">Carregando…</p></div>
@@ -120,6 +121,7 @@ async function carrega(silencioso){
     if(secao==='painel'){const {data,error}=await sb.rpc('admin_estatisticas');if(error)throw error;painel(data)}
     else if(secao==='usuarios'){const {data,error}=await sb.rpc('admin_usuarios');if(error)throw error;USERS=data||[];usuarios()}
     else if(secao==='popups'){await popupsAdm()}
+    else if(secao==='pontos'){await pontosAdm()}
     else{const {data,error}=await sb.rpc('admin_cortesias');if(error)throw error;cortesias(data||[])}
   }catch(e){if(!silencioso)$('ad-body').innerHTML='';msg(erroTxt(e))}
 }
@@ -179,6 +181,37 @@ function painel(d){
 
 /* ---------- pop-ups (Lima Acervo e Lima Hub) ---------- */
 const POP_DEF={acervo:{label:'Baixar no Lima Acervo',url:'https://www.limafilmsparaty.com/'},hub:{label:'Abrir o Lima Hub',url:'https://limahubparaty.com/'}};
+/* ---------- pontos dos barqueiros (perigos, fundeios...) ---------- */
+const TIPO_PT={perigo:'⚠️ Perigo',raso:'🟫 Raso',fundeio:'⚓ Fundeio',combustivel:'⛽ Combustível',comida:'🍽️ Comida',pier:'🛟 Píer / marina',mergulho:'🤿 Mergulho',pesca:'🎣 Pesca',outro:'📍 Outro'};
+let PT_FILTRO='pendente';
+async function pontosAdm(){
+  const {data,error}=await sb.rpc('admin_pontos');
+  if(error){if(/function|does not exist|schema cache/i.test(error.message||'')){$('ad-body').innerHTML=`<div class="panel"><p class="empty">Os pontos dos barqueiros ainda não foram ativados no banco de dados. Rode o arquivo <b>supabase/ferramentas.sql</b> no Supabase (SQL Editor) uma vez.</p></div>`;return}throw error}
+  const L=data||[],cont=s=>L.filter(p=>p.status===s).length;
+  const lista=L.filter(p=>p.status===PT_FILTRO);
+  const card=p=>`<div class="panel" style="display:grid;gap:8px" data-pt="${p.id}">
+    <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:baseline"><b>${esc(TIPO_PT[p.tipo]||p.tipo)} · ${esc(p.nome)}</b><small style="color:var(--muted)">${quando(p.criado)}</small></div>
+    ${p.descricao?`<p style="margin:0;font-size:.92rem">${esc(p.descricao)}</p>`:''}
+    <p class="legend" style="margin:0">Marcado por ${esc(p.autor_nome||'')} ${esc(p.autor_email||'')} · <a href="https://www.google.com/maps/search/?api=1&query=${p.lat},${p.lon}" target="_blank" rel="noopener">ver no mapa (${p.lat.toFixed(5)}, ${p.lon.toFixed(5)})</a></p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      ${p.status!=='aprovado'?`<button type="button" data-st="aprovado">Aprovar</button>`:''}
+      ${p.status!=='recusado'?`<button type="button" class="ghost" data-st="recusado">${p.status==='aprovado'?'Tirar do app':'Recusar'}</button>`:''}
+      ${p.status==='recusado'?`<button type="button" class="ghost" data-st="pendente">Voltar para revisão</button>`:''}
+      <button type="button" class="ghost" data-del>Apagar</button>
+    </div></div>`;
+  $('ad-body').innerHTML=`<div style="display:grid;gap:10px">
+    <p class="legend" style="margin:0">Pontos que os barqueiros marcam na carta (lajes, rasos, fundeios, combustível…). Só aparecem para todos depois de aprovados; perigos e rasos aprovados avisam quem passa perto. Os seus entram aprovados direto. Você recebe um aviso no celular a cada ponto novo.</p>
+    <div class="filters">${[['pendente','Para aprovar'],['aprovado','No app'],['recusado','Recusados']].map(([k,t])=>`<button type="button" data-f="${k}" aria-pressed="${PT_FILTRO===k}">${t} (${cont(k)})</button>`).join('')}</div>
+    ${lista.length?lista.map(card).join(''):`<p class="empty">${PT_FILTRO==='pendente'?'Nenhum ponto esperando aprovação.':'Nada aqui.'}</p>`}
+  </div>`;
+  $('ad-body').querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>{PT_FILTRO=b.dataset.f;pontosAdm().catch(e=>msg(erroTxt(e)))});
+  $('ad-body').querySelectorAll('[data-pt]').forEach(el=>{const id=+el.dataset.pt;
+    el.querySelectorAll('[data-st]').forEach(b=>b.onclick=async()=>{b.disabled=true;const {error}=await sb.rpc('admin_ponto_status',{pid:id,novo:b.dataset.st});
+      if(error){msg(erroTxt(error));b.disabled=false;return}msg(b.dataset.st==='aprovado'?'Ponto aprovado. Já aparece para todos.':'Pronto.','ok');pontosAdm()});
+    el.querySelector('[data-del]').onclick=async()=>{if(!confirm('Apagar este ponto de vez?'))return;const {error}=await sb.from('pontos').delete().eq('id',id);
+      if(error){msg(erroTxt(error));return}msg('Ponto apagado.','ok');pontosAdm()}});
+}
+
 async function popupsAdm(){
   const [p,c]=await Promise.all([sb.from('popups').select('*').order('kind').order('position'),sb.from('popup_settings').select('*').eq('id',1).maybeSingle()]);
   if(p.error){$('ad-body').innerHTML=`<div class="panel"><p class="empty">Os pop-ups ainda não foram ativados no banco de dados. Rode o arquivo <b>supabase/popups.sql</b> no Supabase (SQL Editor) uma vez.</p></div>`;return}
