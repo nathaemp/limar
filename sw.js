@@ -1,7 +1,7 @@
 // Paraty Waters: guarda o app e a carta no celular para abrir sem sinal.
-const SHELL_CACHE = 'limar-v18';
+const SHELL_CACHE = 'limar-v19';
 const CARTA_CACHE = 'limar-cartas-v1';
-const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/maskable-512.png', 'icons/favicon-32.png', 'cartas/cartas.json', 'conta.js', 'conta.css', 'admin.js', 'qr.js', 'icons/toulon.webp', 'popups.js?v=3', 'ferramentas.js?v=2', 'ferramentas.css?v=2'];
+const SHELL = ['./', 'index.html', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png', 'icons/maskable-512.png', 'icons/favicon-32.png', 'cartas/cartas.json', 'conta.js', 'conta.css', 'admin.js', 'qr.js', 'icons/toulon.webp', 'popups.js?v=3', 'ferramentas.js?v=2', 'ferramentas.css?v=2', 'instalar.js?v=1'];
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(SHELL_CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting()));
